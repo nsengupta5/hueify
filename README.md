@@ -1,3 +1,3 @@
 ## Hueify
 
-This is the start of the new Hue
+This is the start of the new hue
