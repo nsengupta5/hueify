@@ -1,6 +1,6 @@
 module github.com/nsengupta5/hueify
 
-go 1.17
+go 1.18
 
 require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
