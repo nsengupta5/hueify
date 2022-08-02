@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import logo from './assets/hueify logo.png';
 import axios from 'axios'
 import Album from './components/Album'
@@ -16,7 +16,7 @@ const App = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-b from-indigo-400 to-indigo-200">
+    <div className="h-full min-h-screen bg-gradient-to-b from-indigo-400 to-indigo-200">
       <div className="flex justify-center pt-64">
         <img src={logo} className="h-20 w-64" alt="logo" />
       </div>
@@ -30,7 +30,9 @@ const App = () => {
         </div>
       </div>
         {album !== "" &&
-        <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
+        <div>
+          <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
+        </div>
         }
     </div>
   );
