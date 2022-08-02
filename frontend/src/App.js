@@ -16,11 +16,11 @@ const App = () => {
   }
 
   return (
-    <div className="h-full min-h-screen bg-gradient-to-b from-indigo-400 to-indigo-200">
+    <div className="h-full min-h-screen bg-gradient-to-b from-cyan-400 via-white-400 to-white">
       <div className="flex justify-center pt-64">
         <img src={logo} className="h-20 w-64" alt="logo" />
       </div>
-      <h2 className="flex font-blinker text-lg justify-center mt-8">Discover new music based on album artwork!</h2>
+      <h2 className="flex font-blinker font-medium text-lg justify-center mt-8">Discover new music based on album artwork!</h2>
       <div className="flex justify-center mt-8">
         <div className="mb-3 xl:w-96">
           <div className="input-group relative flex items-stretch w-full mb-4">
