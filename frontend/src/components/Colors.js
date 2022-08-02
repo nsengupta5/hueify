@@ -5,8 +5,6 @@ const Colors = (props) => {
     colors
   } = props
 
-  console.log(colors[0].Color.R)
-
   return (
     <div className="flex justify-center mt-2">
       {typeof(colors) !== "string" && (colors.map(color => {

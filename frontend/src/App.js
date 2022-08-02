@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import logo from './assets/hueify logo.png';
 import axios from 'axios'
 import Album from './components/Album'
@@ -11,7 +11,6 @@ const App = () => {
     event.preventDefault();
     axios.get(`/api/get-album/${url}`)
       .then((res) => {
-        console.log(res.data)
         setAlbum(res.data)
       })
   }
@@ -30,9 +29,9 @@ const App = () => {
           </div>
         </div>
       </div>
-      {album !== "" &&
-      <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
-      }
+        {album !== "" &&
+        <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
+        }
     </div>
   );
 }
