@@ -13,6 +13,6 @@ To just run the server: `go run main.go`
 
 https://app.swaggerhub.com/apis/amirrezapanahi/hueify/1.0.0#/developers/NewAlbums
 
-![](./IMG-1335.jpg){:height="36px" width="36px"}.
+![](./IMG-1335.jpg){width=250}
 
-![](./IMG-1336.jpg){:height="36px" width="36px"}.
+![](./IMG-1336.jpg){width=250}
