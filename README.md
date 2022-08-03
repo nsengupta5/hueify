@@ -12,3 +12,5 @@ To just run the server: `go run main.go`
 #### API reference
 
 https://app.swaggerhub.com/apis/amirrezapanahi/hueify/1.0.0#/developers/NewAlbums
+
+![](./IMG-1335.jpg)
