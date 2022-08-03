@@ -40,6 +40,14 @@ type AlbumRes struct {
 	RelatedArtistsURIs []string                   `json:"related_artists_uri"`
 }
 
+type RecommendedAlbum struct {
+	Type    string   `json:"type"`
+	Id      string   `json:"id"`
+	Name    string   `json:"name"`
+	Artists []string `json:"artists"`
+	Image   string   `json:"image"`
+}
+
 var authConfig *clientcredentials.Config
 var accessToken *oauth2.Token
 var client spotify.Client
