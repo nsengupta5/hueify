@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import logo from './assets/hueify logo.png';
+import './assets/text.css';
 
 function App() {
   const [url, setUrl] = useState("");
