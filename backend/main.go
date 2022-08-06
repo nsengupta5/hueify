@@ -73,7 +73,6 @@ func main() {
 	// Routes
 	api := router.Group("/api")
 	{
-		api.GET("/artist/:uri", getArtist)
 		api.GET("/get-album/:uri", getAlbum)
 		api.POST("/retrieve-new-music", getNewAlbums)
 		api.GET("/related/:uri", getAllRelatedArtists)
@@ -97,27 +96,13 @@ func loadImage(fileInput string) (image.Image, error) {
 	return img, err
 }
 
-func getArtist(c *gin.Context) {
-	uri := c.Param("uri")
-	fmt.Println(uri)
-	id := strings.Split(uri, ":")[2]
-
-	artistID := spotify.ID(id)
-	artist, err := client.GetArtist(artistID)
-	if err != nil {
-		log.Fatalf("error retrieve artist data: %v", err)
-	}
-
-	c.IndentedJSON(http.StatusOK, artist)
-}
-
 func getAlbum(c *gin.Context) {
 	uri := c.Param("uri")
 	id := strings.Split(uri, ":")[2]
 
 	album, err := client.GetAlbum(spotify.ID(id))
 	if err != nil {
-		c.AbortWithStatusJSON(404, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "error retrieve album data",
 			"error":   err,
 		})
@@ -125,7 +110,7 @@ func getAlbum(c *gin.Context) {
 
 	img, err := loadImage(album.Images[0].URL)
 	if err != nil {
-		c.AbortWithStatusJSON(404, gin.H{
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to load image",
 			"error":   err,
 		})
@@ -133,7 +118,7 @@ func getAlbum(c *gin.Context) {
 
 	noCroppingColours, err := prominentcolor.KmeansWithArgs(prominentcolor.ArgumentNoCropping, img)
 	if err != nil {
-		c.AbortWithStatusJSON(404, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to process image",
 			"error":   err,
 		})
@@ -141,7 +126,7 @@ func getAlbum(c *gin.Context) {
 
 	croppingColours, err := prominentcolor.KmeansWithArgs(prominentcolor.ArgumentDefault, img)
 	if err != nil {
-		c.AbortWithStatusJSON(404, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to process image",
 			"error":   err,
 		})
@@ -169,7 +154,7 @@ func getAlbum(c *gin.Context) {
 
 	relatedArtists, err := client.GetRelatedArtists(album.Artists[0].ID)
 	if err != nil {
-		c.AbortWithStatusJSON(404, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to get related artists",
 			"error":   err,
 		})
@@ -194,7 +179,7 @@ func getAlbum(c *gin.Context) {
 
 	b, err := json.Marshal(albumRes)
 	if err != nil {
-		c.AbortWithStatusJSON(404, gin.H{
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to json marshal album",
 			"error":   err,
 		})
@@ -225,7 +210,13 @@ func getAllRelatedArtists(c *gin.Context) {
 		var artistID string
 		queue, artistName, artistID = Queue.Dequeue(queue)
 
-		relatedArtistNames, _ := getRelatedArtists(relatedStruct, spotify.ID(artistID), 10)
+		relatedArtistNames, _, err := getRelatedArtists(relatedStruct, spotify.ID(artistID), 10)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to get related artists",
+				"error":   err,
+			})
+		}
 
 		relatedStruct[artistName] = relatedArtistNames
 
@@ -242,13 +233,13 @@ func getAllRelatedArtists(c *gin.Context) {
 
 }
 
-func getRelatedArtists(relatedStruct ArtistRelations, id spotify.ID, count int) (map[string]string, int) {
+func getRelatedArtists(relatedStruct ArtistRelations, id spotify.ID, count int) (map[string]string, int, error) {
 	relatedArtistsInfo := make(map[string]string)
 
 	fmt.Println("id", id)
 	relatedArtists, err := client.GetRelatedArtists(id)
 	if err != nil {
-		log.Fatal("bruh ", err)
+		return nil, 0, err
 	}
 
 	for i, artist := range relatedArtists {
@@ -260,7 +251,7 @@ func getRelatedArtists(relatedStruct ArtistRelations, id spotify.ID, count int) 
 		}
 	}
 
-	return relatedArtistsInfo, len(relatedArtistsInfo)
+	return relatedArtistsInfo, len(relatedArtistsInfo), nil
 }
 
 func getNewAlbums(c *gin.Context) {
