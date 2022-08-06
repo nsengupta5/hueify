@@ -39,16 +39,6 @@ app.use(cors())
   .use(cookieParser())
   .use(express.static(path.join(__dirname, "../client/build")));
 
-// export default function (app) {
-//   app.use(
-//     '/api',
-//     createProxyMiddleware({
-//       target: 'http://localhost:8888',
-//       changeOrigin: true,
-//     })
-//   );
-// };
-
 // Handle GET requests to /api route
 app.get("/api", (req, res) => {
   res.sendStatus(200);
