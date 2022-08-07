@@ -29,11 +29,11 @@ const App = () => {
           </div>
         </div>
       </div>
-        {album !== "" &&
-        <div>
-          <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
-        </div>
-        }
+      {album !== "" &&
+      <div>
+        <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
+      </div>
+      }
     </div>
   );
 }
