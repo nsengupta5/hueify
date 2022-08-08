@@ -1,0 +1,57 @@
+.text-box-slide-up {
+    animation: slide-up 2s;
+    line-height: 3em;
+}
+
+.text-box-slide-down {
+    animation: slide-down 2s;
+    line-height: 8em;
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        line-height: 8em;
+    }
+
+    to {
+        opacity: 1;
+        line-height: 3em;
+    }
+}
+
+@keyframes slide-down {
+    from {
+        opacity: 1;
+        line-height: 3em;
+    }
+
+    to {
+        opacity: 0;
+        line-height: 8em;
+    }
+}
+
+.loading:after {
+    content: ' .';
+    animation: dots 1s steps(5, end) infinite;}
+
+@keyframes dots {
+    0%, 20% {
+        color: rgba(0,0,0,0);
+        text-shadow:
+                .25em 0 0 rgba(0,0,0,0),
+                .5em 0 0 rgba(0,0,0,0);}
+    40% {
+        color: black;
+        text-shadow:
+                .25em 0 0 rgba(0,0,0,0),
+                .5em 0 0 rgba(0,0,0,0);}
+    60% {
+        text-shadow:
+                .25em 0 0 black,
+                .5em 0 0 rgba(0,0,0,0);}
+    80%, 100% {
+        text-shadow:
+                .25em 0 0 black,
+                .5em 0 0 black;}}

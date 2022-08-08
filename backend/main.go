@@ -4,19 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	Queue "hueify/lib"
-	"image"
-	"log"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	Queue "hueify/lib"
+	"image"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 type Color interface {
@@ -211,12 +210,14 @@ func getAllRelatedArtists(c *gin.Context) {
 
 	artist, _ := client.GetArtist(id)
 	nameAndID := []string{artist.Name, artist.ID.String()}
-	queue = Queue.Enqueue(queue, strings.Join(nameAndID, "|"))
+	depth := 0
+	queue = Queue.Enqueue(queue, []string{strings.Join(nameAndID, "|"), strconv.FormatInt(int64(depth), 10)})
 
-	for start := time.Now(); time.Since(start) < 2*time.Second; {
+	//start := time.Now(); time.Since(start) < 2*time.Second;
+	for depth < 4 && len(queue) != 0 {
 		var artistName string
 		var artistID string
-		queue, artistName, artistID = Queue.Dequeue(queue)
+		queue, artistName, artistID, depth = Queue.Dequeue(queue)
 
 		relatedArtistNames, _, err := getRelatedArtists(relatedStruct, spotify.ID(artistID), 10)
 		if err != nil {
@@ -228,11 +229,12 @@ func getAllRelatedArtists(c *gin.Context) {
 
 		relatedStruct[artistName] = relatedArtistNames
 
+		depth = depth + 1
 		for relatedArtistName, relatedArtistID := range relatedArtistNames {
 			if _, has := visitedArtists[relatedArtistName]; !has {
 				visitedArtists[relatedArtistName] = true
-				complete := []string{relatedArtistName, relatedArtistID}
-				queue = Queue.Enqueue(queue, strings.Join(complete, "|"))
+				completeString := []string{relatedArtistName, relatedArtistID}
+				queue = Queue.Enqueue(queue, []string{strings.Join(completeString, "|"), strconv.FormatInt(int64(depth), 10)})
 			}
 		}
 	}

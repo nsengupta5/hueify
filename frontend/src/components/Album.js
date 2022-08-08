@@ -1,4 +1,6 @@
 import Colors from './Colors'
+import React, {useState, useEffect} from 'react'
+import Text from "./Text";
 
 const Album = (props) => {
   const {
@@ -16,6 +18,7 @@ const Album = (props) => {
       <h1 className="font-blinker mt-3">{name}</h1>
       <h3 className="font-blinker">{artist}</h3>
       <Colors colors={colors} />
+        <Text text={"This is a new request"} loading={true}/>
     </div>
   )
 }
