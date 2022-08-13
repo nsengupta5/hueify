@@ -18,10 +18,6 @@ import (
 	"strings"
 )
 
-type Color interface {
-	prominentcolor.ColorItem
-}
-
 type Index interface {
 	uint16 | int
 }
@@ -81,7 +77,7 @@ func main() {
 	api := router.Group("/api")
 	{
 		api.GET("/get-album/:uri", getAlbum)
-		api.POST("/retrieve-new-music", getNewAlbums)
+		api.POST("/retrieve-new-music/", getNewAlbums)
 		api.GET("/related/:uri", getAllRelatedArtists)
 
 	}
