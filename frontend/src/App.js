@@ -3,6 +3,7 @@ import logo from './assets/hueify logo.png';
 import './assets/text.css';
 import axios from 'axios'
 import Album from './components/Album'
+import ColorPicker from './components/ColorPicker'
 
 const App = () => {
   const [url, setUrl] = useState("");
@@ -16,11 +17,28 @@ const App = () => {
       })
   }
 
+  const genPlaylist = (event) => {
+    event.preventDefault();
+    axios.post(`/api/create-playlist/`,
+        {
+            primaryRGB: "asdas",
+            secondaryRGB: "adssad"
+        })
+        .then((res) => {
+            setAlbum(res.data)
+        })
+  }
+
   return (
     <div className="h-full min-h-screen bg-gradient-to-b from-cyan-400 via-white-400 to-white">
       <div className="flex justify-center pt-64">
         <img src={logo} className="h-20 w-64" alt="logo" />
       </div>
+        <div className="flex justify-center pt-64">
+            <ColorPicker text={"Primary"}/>
+            <ColorPicker text={"Secondary"}/>
+            <button className="btn inline-block px-6 py-2 border-2 border-gray-900 bg-gray-900 text-gray-50 font-medium text-xs leading-tight uppercase rounded hover:bg-black focus:outline-none focus:ring-0 transition duration-150 ease-in-out" type="button" id="button-addon3" onClick={genPlaylist}>Generate</button>
+        </div>
       <h2 className="flex font-blinker font-medium text-lg justify-center mt-8">Discover new music based on album artwork!</h2>
       <div className="flex justify-center mt-8">
         <div className="mb-3 xl:w-96">

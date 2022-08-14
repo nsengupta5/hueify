@@ -10,7 +10,9 @@ import (
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	Queue "hueify/lib"
+	Generator "hueify/generator"
+	Queue "hueify/queue"
+
 	"image"
 	"log"
 	"net/http"
@@ -52,6 +54,7 @@ var accessToken *oauth2.Token
 var client spotify.Client
 
 func main() {
+	Generator.DrawPlayistCover(0, 40, 150, 30, 200, 100)
 
 	authConfig = &clientcredentials.Config{
 		ClientID:     "f1cfc1de2b5c4b419b2c8e5c50ccd4e1",
@@ -79,6 +82,7 @@ func main() {
 		api.GET("/get-album/:uri", getAlbum)
 		api.POST("/retrieve-new-music/", getNewAlbums)
 		api.GET("/related/:uri", getAllRelatedArtists)
+		api.POST("/create-playlist/", createPlaylist)
 
 	}
 
@@ -86,6 +90,15 @@ func main() {
 	if err != nil {
 		return
 	}
+}
+
+func createPlaylist(c *gin.Context) {
+	myError := Generator.DrawPlayistCover(0, 255, 255, 100, 0, 0)
+	if myError != nil {
+		return
+	}
+
+	c.AbortWithStatus(200)
 }
 
 func loadImage(fileInput string) (image.Image, error) {
@@ -100,6 +113,7 @@ func loadImage(fileInput string) (image.Image, error) {
 }
 
 func getAlbum(c *gin.Context) {
+
 	uri := c.Param("uri")
 	id := strings.Split(uri, ":")[2]
 
@@ -267,7 +281,7 @@ func getNewAlbums(c *gin.Context) {
 func rgbDiff(
 	color prominentcolor.ColorItem,
 	originalColorScheme []prominentcolor.ColorItem,
-	difference uint32) (prominentcolor.ColorItem, bool, int) {
+	difference uint32) (colors prominentcolor.ColorItem, matches bool, index int) {
 
 	myRGBRanges := rgbRanges{
 		redMax:   color.Color.R + difference,
