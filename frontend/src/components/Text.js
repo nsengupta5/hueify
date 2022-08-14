@@ -13,14 +13,14 @@ const Text = (props) => {
 
     useEffect(() => {
         const delay = t => new Promise(resolve => setTimeout(resolve, t));
-        delay(5000).then(() => {
+        delay(2000).then(() => {
             setAnimation("text-box-slide-down");
-            delay(1000).then(() =>{
+            delay(500).then(() =>{
                 setAnimation("text-box-slide-up")
                 setLoading(false)
                 setText("Request Added 🎉")
-                delay(3000).then(() =>{
-                    setAnimation("fade-away")
+                delay(2000).then(() =>{
+                    setAnimation("text-box-slide-down-off")
                 })
             })
         })

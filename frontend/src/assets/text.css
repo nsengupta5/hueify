@@ -14,6 +14,12 @@
     line-height: 5em;
 }
 
+.text-box-slide-down-off{
+    animation: slide-down 1.5s;
+    line-height: 5em;
+    opacity: 0;
+}
+
 @keyframes fade-away {
     from {
         opacity: 1;
