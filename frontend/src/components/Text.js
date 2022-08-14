@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useState} from "react";
 import '../assets/text.css';
 
 const Text = (props) => {
@@ -7,29 +7,29 @@ const Text = (props) => {
         loading
     } = props
 
-    const [slides, setSlides] = useState(["text-box-slide-up","text-box-slide-down"])
+    const [animation, setAnimation] = useState("text-box-slide-up")
+    const [isLoading, setLoading] = useState(loading)
+    const [newText, setText] = useState(text)
 
     useEffect(() => {
-        let timer = []
-        for (let i = 0; i< slides.length; i++){
-            setTimeout(() => {
-            timer[i] = setSlides(previousValue => {
-                let newValue = [...previousValue]
-                newValue[i] = ''
-                return newValue
-            })}, 5000)
-        }
-        return () => {
-            clearTimeout(timer)
-        }
+        const delay = t => new Promise(resolve => setTimeout(resolve, t));
+        delay(5000).then(() => {
+            setAnimation("text-box-slide-down");
+            delay(1000).then(() =>{
+                setAnimation("text-box-slide-up")
+                setLoading(false)
+                setText("Request Added 🎉")
+                delay(3000).then(() =>{
+                    setAnimation("fade-away")
+                })
+            })
+        })
     }, [])
 
     return (
-            slides.map((item, index) => (
-                <div className={item} key={index}>
-                    <span className={loading ? "font-blinker loading" : "font-blinker"}>{text}</span>
-                </div>
-            ))
+            <div className={animation}>
+                <span className={isLoading ? "font-blinker loading" : "font-blinker"}>{newText}</span>
+            </div>
     )
 }
 

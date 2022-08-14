@@ -1,5 +1,5 @@
 import Colors from './Colors'
-import React, {useState, useEffect} from 'react'
+import React from "react";
 import Text from "./Text";
 
 const Album = (props) => {
@@ -15,8 +15,8 @@ const Album = (props) => {
       <div className="h-64 w-64 border-1.5 drop-shadow-lg border-gray-900">
         <img src={image} className="rounded-md" alt="album-cover" />
       </div>
-      <h1 className="font-blinker mt-3">{name}</h1>
-      <h3 className="font-blinker">{artist}</h3>
+      <h1 className="font-blinker mt-3 font-semibold text-lg">{name}</h1>
+      <h3 className="font-blinker font-semibold">{artist}</h3>
       <Colors colors={colors} />
         <Text text={"This is a new request"} loading={true}/>
     </div>

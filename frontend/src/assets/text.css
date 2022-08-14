@@ -1,17 +1,33 @@
 .text-box-slide-up {
-    animation: slide-up 2s;
+    animation: slide-up 1.5s;
     line-height: 3em;
 }
 
+.fade-away {
+    animation: fade-away 1.5s;
+    line-height: 3em;
+    opacity: 0;
+}
+
 .text-box-slide-down {
-    animation: slide-down 2s;
-    line-height: 8em;
+    animation: slide-down 1.5s;
+    line-height: 5em;
+}
+
+@keyframes fade-away {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
 @keyframes slide-up {
     from {
         opacity: 0;
-        line-height: 8em;
+        line-height: 5em;
     }
 
     to {

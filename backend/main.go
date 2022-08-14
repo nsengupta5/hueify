@@ -54,7 +54,7 @@ var accessToken *oauth2.Token
 var client spotify.Client
 
 func main() {
-	Generator.DrawPlayistCover(0, 40, 150, 30, 200, 100)
+	Generator.DrawPlayistCover(255, 40, 150, 30, 200, 100)
 
 	authConfig = &clientcredentials.Config{
 		ClientID:     "f1cfc1de2b5c4b419b2c8e5c50ccd4e1",
