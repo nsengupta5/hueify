@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	// "math"
 	"fmt"
 	"image"
 	"log"
 	"net/http"
 	"strings"
-
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -128,35 +128,17 @@ func getAlbum(c *gin.Context) {
 		log.Fatal("Failed to load image", err)
 	}
 
-	noCroppingColours, err := prominentcolor.KmeansWithArgs(prominentcolor.ArgumentNoCropping, img)
+	noCroppingColours, err := prominentcolor.KmeansWithAll(6, img, prominentcolor.ArgumentNoCropping, 640, nil)
 	if err != nil {
 		log.Fatal("Failed to process image", err)
 	}
-
-	croppingColours, err := prominentcolor.KmeansWithArgs(prominentcolor.ArgumentDefault, img)
-	if err != nil {
-		log.Fatal("Failed to process image", err)
-	}
-
-	for i, c := range croppingColours {
-		originalColor, isSimilar, index := rgbDiff(c, noCroppingColours, 50)
-		if isSimilar {
-			if originalColor.Cnt > c.Cnt {
-				//delete the c from croppingColours
-				croppingColours = remove(croppingColours, i)
-			} else {
-				//delete the originalColor from noCroppingColours
-				noCroppingColours = remove(noCroppingColours, index)
-			}
-		}
-	}
-
-	jointColours := append(noCroppingColours, croppingColours...)
 
 	relatedArtists, err := client.GetRelatedArtists(album.Artists[0].ID)
 	if err != nil {
 		log.Fatal("Failed to get related artists", err)
 	}
+
+	//noCroppingColours = removeSimilarColor(noCroppingColours)
 
 	relatedArtistsURIs := make([]string, 0)
 	relatedArtistsNames := make([]string, 0)
@@ -170,7 +152,7 @@ func getAlbum(c *gin.Context) {
 		Artist:             album.Artists[0].Name,
 		AlbumImg:           album.Images[0].URL,
 		AlbumName:          album.Name,
-		ImageColors:        jointColours,
+		ImageColors:        noCroppingColours,
 		RelatedArtists:     relatedArtistsNames,
 		RelatedArtistsURIs: relatedArtistsURIs,
 	}
@@ -189,39 +171,55 @@ func getAlbum(c *gin.Context) {
 
 }
 
-func rgbDiff(
-	color prominentcolor.ColorItem,
-	originalColorScheme []prominentcolor.ColorItem,
-	difference uint32) (prominentcolor.ColorItem, bool, int) {
+func Combinations(iterable []prominentcolor.ColorItem, r int) (rt [][]prominentcolor.ColorItem) {
+	pool := iterable
+	n := len(pool)
 
-	myRGBRanges := rgbRanges{
-		redMax:   color.Color.R + difference,
-		redMin:   color.Color.R - difference,
-		greenMax: color.Color.G + difference,
-		greenMin: color.Color.G - difference,
-		blueMax:  color.Color.B + difference,
-		blueMin:  color.Color.B - difference,
+	if r > n {
+		return
 	}
 
-	for i, c := range originalColorScheme {
-		if similarColor(c, myRGBRanges) {
-			return c, true, i
+	indices := make([]int, r)
+	for i := range indices {
+		indices[i] = i
+	}
+
+	result := make([]prominentcolor.ColorItem, r)
+	for i, el := range indices {
+		result[i] = pool[el]
+	}
+	s2 := make([]prominentcolor.ColorItem, r)
+	copy(s2, result)
+	rt = append(rt, s2)
+
+	for {
+		i := r - 1
+		for ; i >= 0 && indices[i] == i+n-r; i -= 1 {
 		}
+
+		if i < 0 {
+			return
+		}
+
+		indices[i] += 1
+		for j := i + 1; j < r; j += 1 {
+			indices[j] = indices[j-1] + 1
+		}
+
+		for ; i < len(indices); i += 1 {
+			result[i] = pool[indices[i]]
+		}
+		s2 = make([]prominentcolor.ColorItem, r)
+		copy(s2, result)
+		rt = append(rt, s2)
 	}
 
-	return prominentcolor.ColorItem{}, false, 1
 }
 
-func similarColor(color prominentcolor.ColorItem, rgb rgbRanges) bool {
-	isSimilarRed := color.Color.R <= rgb.redMax && color.Color.R >= rgb.redMin
-	isSimilarGreen := color.Color.G <= rgb.greenMax && color.Color.G >= rgb.greenMin
-	isSimilarBlue := color.Color.B <= rgb.blueMax && color.Color.B >= rgb.blueMin
-
-	if isSimilarRed && isSimilarGreen && isSimilarBlue {
-		return true
-	}
-
-	return false
+func removeSimilarColor(
+	originalColorScheme []prominentcolor.ColorItem) ([]prominentcolor.ColorItem) {
+	newColorScheme := originalColorScheme[:6]
+	return newColorScheme
 }
 
 func remove[T any, K Index](s []T, i K) []T {
