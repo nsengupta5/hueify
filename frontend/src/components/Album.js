@@ -18,7 +18,6 @@ const Album = (props) => {
       <h1 className="font-blinker mt-3 font-semibold text-lg">{name}</h1>
       <h3 className="font-blinker font-semibold">{artist}</h3>
       <Colors colors={colors} />
-        <Text text={"This is a new request"} loading={true}/>
     </div>
   )
 }

@@ -193,12 +193,11 @@ async function retrieveAlbums(uris, token, originalColorScheme, originalColorPro
 
     // For each album
     for (const item of data.items) {
-      if (item.album_type == "album") {
+      if (item.album_type === "album") {
         var artists = []
         for (var j = 0; j < item.artists.length; j++) {
           artists[j] = item.artists[j].name
         }
-
 
         const color_options = {
           count: 6,

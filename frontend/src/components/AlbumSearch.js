@@ -1,21 +1,56 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import Album from "./Album";
 import axios from "axios";
 import {Link} from "react-router-dom";
+// import SSE from 'sse';
+import Text from "./Text";
 
 const AlbumSearch = () => {
 
     const [url, setUrl] = useState("");
-    const [album, setAlbum] = useState("")
+    const [album, setAlbum] = useState({})
+    const [recommendedAlbums, setRecommendedAlbums] = useState([])
+    // const [recommendedAlbum, setRecommendedAlbum] = useState({})
     const [goClicked, setGoClicked] = useState(false)
 
+    useEffect(() => {
+        if (Object.keys(album).length !== 0){
+            console.log(album)
+            getRecommendedAlbums()
+        }
+    }, [album])
+
     const getAlbum = (event) => {
-        setGoClicked(true)
         event.preventDefault();
+
+        setGoClicked(true)
         axios.get(`/api/get-album/${url}`)
             .then((res) => {
                 setAlbum(res.data)
             })
+    }
+
+    const getRecommendedAlbums = () => {
+
+        const source = new EventSource(`/api/recommended/${album.album_id}/${album.artist_id}`)
+
+        // const source = new SSE('/api/retrieve-new-music/',
+        //     {
+        //         withCredentials: true,
+        //         payload:{
+        //             colorScheme: album.image_colors,
+        //             uris: album.related_artists_uri
+        //         }
+        //     });
+
+        source.onmessage = (event) => {
+            const jsonData = JSON.parse(event.data);
+            console.log(jsonData)
+            setRecommendedAlbums([...recommendedAlbums, jsonData]);
+            if (jsonData.endStream === true){
+                source.close()
+            }
+        }
     }
 
     return (
@@ -38,9 +73,10 @@ const AlbumSearch = () => {
             :
             <></>
         }
-        {album !== "" &&
+        {Object.keys(album).length !== 0 &&
         <div>
             <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
+            <Text text={"This is a new request"} loading={true}/>
         </div>
         }
         </>
