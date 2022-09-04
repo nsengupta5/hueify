@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+
+	// "math"
 	"fmt"
-	"github.com/EdlinOrg/prominentcolor"
-	"github.com/gin-gonic/contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/zmb3/spotify"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
+	"image"
+	"log"
+	"net/http"
+	"strings"
+
 	Generator "hueify/generator"
 	Queue "hueify/queue"
 	"image"
@@ -19,6 +20,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/EdlinOrg/prominentcolor"
+	"github.com/gin-gonic/contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 type Options spotify.Options
@@ -199,7 +207,7 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 			})*/
 	}
 
-	noCroppingColours, err := prominentcolor.KmeansWithArgs(prominentcolor.ArgumentNoCropping, img)
+	noCroppingColours, err := prominentcolor.KmeansWithAll(6, img, prominentcolor.ArgumentNoCropping, 640, nil)
 	if err != nil {
 		return AlbumRes{}, err
 		//c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -207,35 +215,6 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 		//	"error":   err,
 		//})
 	}
-
-	croppingColours, err := prominentcolor.KmeansWithArgs(prominentcolor.ArgumentDefault, img)
-	if err != nil {
-		return AlbumRes{}, err
-		//c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-		//	"message": "Failed to process image",
-		//	"error":   err,
-		//})
-	}
-
-	//use hashmap
-
-	//for i in range croppingColoursExtra
-	for i, c := range croppingColours {
-		originalColor, isSimilar, index := rgbDiff(c, noCroppingColours, 50)
-		// originalColorExtra, isSimilarExtra, indexExtra := rgbDiff(c, croppingColoursExtra, 50)
-
-		if isSimilar {
-			if originalColor.Cnt > c.Cnt {
-				//delete the c from croppingColours
-				croppingColours = remove(croppingColours, i)
-			} else {
-				//delete the originalColor from noCroppingColours
-				noCroppingColours = remove(noCroppingColours, index)
-			}
-		}
-	}
-
-	jointColours := append(noCroppingColours, croppingColours...)
 
 	relatedArtists, err := client.GetRelatedArtists(album.Artists[0].ID)
 	if err != nil {
@@ -245,6 +224,8 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 		//	"error":   err,
 		//})
 	}
+
+	//noCroppingColours = removeSimilarColor(noCroppingColours)
 
 	relatedArtistsURIs := make([]string, 0)
 	relatedArtistsNames := make([]string, 0)
@@ -260,7 +241,7 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 		AlbumImg:           album.Images[0].URL,
 		AlbumName:          album.Name,
 		AlbumId:            album.ID,
-		ImageColors:        jointColours,
+		ImageColors:        noCroppingColours,
 		RelatedArtists:     relatedArtistsNames,
 		RelatedArtistsURIs: relatedArtistsURIs,
 	}
@@ -497,6 +478,50 @@ func compareArtwork(original []prominentcolor.ColorItem, current []prominentcolo
 	return count
 }
 
+func Combinations(iterable []prominentcolor.ColorItem, r int) (rt [][]prominentcolor.ColorItem) {
+	pool := iterable
+	n := len(pool)
+
+	if r > n {
+		return
+	}
+
+	indices := make([]int, r)
+	for i := range indices {
+		indices[i] = i
+	}
+
+	result := make([]prominentcolor.ColorItem, r)
+	for i, el := range indices {
+		result[i] = pool[el]
+	}
+	s2 := make([]prominentcolor.ColorItem, r)
+	copy(s2, result)
+	rt = append(rt, s2)
+
+	for {
+		i := r - 1
+		for ; i >= 0 && indices[i] == i+n-r; i -= 1 {
+		}
+
+		if i < 0 {
+			return
+		}
+
+		indices[i] += 1
+		for j := i + 1; j < r; j += 1 {
+			indices[j] = indices[j-1] + 1
+		}
+
+		for ; i < len(indices); i += 1 {
+			result[i] = pool[indices[i]]
+		}
+		s2 = make([]prominentcolor.ColorItem, r)
+		copy(s2, result)
+		rt = append(rt, s2)
+	}
+}
+
 func rgbDiff(
 	color prominentcolor.ColorItem,
 	originalColorScheme []prominentcolor.ColorItem,
@@ -518,6 +543,12 @@ func rgbDiff(
 	}
 
 	return prominentcolor.ColorItem{}, false, 1
+}
+
+func removeSimilarColor(
+	originalColorScheme []prominentcolor.ColorItem) []prominentcolor.ColorItem {
+	newColorScheme := originalColorScheme[:6]
+	return newColorScheme
 }
 
 func similarColor(color prominentcolor.ColorItem, rgb rgbRanges) bool {

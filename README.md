@@ -13,6 +13,19 @@ To just run the server: `go run main.go`
 
 https://app.swaggerhub.com/apis/amirrezapanahi/hueify/1.0.0#/developers/NewAlbums
 
-![](./IMG-1335.jpg)
+#### Business Model
+https://docs.google.com/document/d/1eVjes-pO3xvfwdHUF0d7mZ8O56oZ-w6KAXtYMC7PvaQ/edit?usp=sharing
 
-![](./IMG-1336.jpg)
+#### Other Ideas
+- Feed in a color palette and generate playlist from that (Updated daily)
+    - Generate custom artwork for playlist
+        - Give users color wheel and pick 2 dominant colors
+        - Gradient ball with 2 most dominant colors
+    - Generated playlist will have color palette
+    - If want to add other songs:
+        - Input playlist link into hueify
+        - Get color palette from playlist cover
+        - Remove songs already in playlist from recommendations generated
+        - Add new recommendations to existing playlist
+    - Additional requirements: authentication methods
+- Once recommended albums generated, take 3+ songs from each album and create a playlist
