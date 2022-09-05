@@ -3,14 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-
-	// "math"
 	"fmt"
-	"image"
-	"log"
-	"net/http"
-	"strings"
-
 	Generator "hueify/generator"
 	Queue "hueify/queue"
 	"image"

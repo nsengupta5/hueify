@@ -34,15 +34,6 @@ const AlbumSearch = () => {
 
         const source = new EventSource(`/api/recommended/${album.album_id}/${album.artist_id}`)
 
-        // const source = new SSE('/api/retrieve-new-music/',
-        //     {
-        //         withCredentials: true,
-        //         payload:{
-        //             colorScheme: album.image_colors,
-        //             uris: album.related_artists_uri
-        //         }
-        //     });
-
         source.onmessage = (event) => {
             const jsonData = JSON.parse(event.data);
             console.log(jsonData)
