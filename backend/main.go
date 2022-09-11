@@ -114,6 +114,10 @@ func main() {
 	}
 }
 
+func getColors(img image.Image) ([]prominentcolor.ColorItem, error) {
+	return prominentcolor.KmeansWithAll(6, img, prominentcolor.ArgumentNoCropping, 640, nil)
+}
+
 func getAllRelatedArtistsReq(c *gin.Context) {
 	id := spotify.ID(strings.Split(c.Param("uri"), ":")[2])
 
@@ -200,7 +204,7 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 			})*/
 	}
 
-	noCroppingColours, err := prominentcolor.KmeansWithAll(6, img, prominentcolor.ArgumentNoCropping, 640, nil)
+	noCroppingColours, err := getColors(img)
 	if err != nil {
 		return AlbumRes{}, err
 		//c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -335,6 +339,7 @@ func getNewAlbums(c *gin.Context) {
 	albumId := c.Param("albumId")
 	artistId := c.Param("artistId")
 	album, err := getAlbum(albumId, false)
+
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "error retrieve album data",
@@ -359,13 +364,19 @@ func getNewAlbums(c *gin.Context) {
 	//split related artists list into 3 slices
 	//for len(recommended) != cap(recommended) {
 	//	go func() {
-	//		recommended, err = searchAlbums(relatedArtists[:len(relatedArtists)/2], originalColorScheme, recommended)
+	//		recommended, err = searchAlbums(relatedArtists[:len(relatedArtists)*(1/3)], originalColorScheme, recommended, c)
 	//		if err != nil {
 	//
 	//		}
 	//	}()
 	//	go func() {
-	//		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)/2:], originalColorScheme, recommended)
+	//		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(1/3):len(relatedArtists)*(2/3)], originalColorScheme, recommended, c)
+	//		if err != nil {
+	//
+	//		}
+	//	}()
+	//	go func() {
+	//		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(2/3):], originalColorScheme, recommended, c)
 	//		if err != nil {
 	//
 	//		}
@@ -409,16 +420,16 @@ func searchAlbums(
 				return ch, err
 			}
 
-			colors, err := prominentcolor.KmeansWithArgs(prominentcolor.ArgumentNoCropping, img)
+			colors, err := getColors(img)
 			if err != nil {
 				return ch, err
 			}
 
 			//compare colors to original color scheme
-			similarColorsCount := compareArtwork(originalColorScheme, colors)
-			ratio := float32(similarColorsCount / len(colors))
+			artworkIsSimilar := compareArtwork(originalColorScheme, colors)
+
 			//if 50% match then write to channel
-			if visited := visitedAlbums[album.ID.String()]; ratio >= 0.5 && !visited {
+			if visited := visitedAlbums[album.ID.String()]; artworkIsSimilar && !visited {
 				fmt.Println("color match:")
 
 				endStream := len(ch) == cap(ch)
@@ -439,8 +450,8 @@ func searchAlbums(
 				ch <- albumToReturn
 
 				c.Stream(func(w io.Writer) bool {
-					if msg, ok := <-ch; ok {
-						c.SSEvent("message", msg)
+					if contents, ok := <-ch; ok {
+						c.SSEvent("message", contents)
 						return false
 					}
 					return true
@@ -456,7 +467,12 @@ func searchAlbums(
 	return ch, nil
 }
 
-func compareArtwork(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) int {
+func compareArtwork(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
+
+	// concept: add priority to the colors
+	//sort based on count
+	// create diff variable
+
 	count := 0
 
 	for _, currentColor := range current {
@@ -468,7 +484,50 @@ func compareArtwork(original []prominentcolor.ColorItem, current []prominentcolo
 		}
 	}
 
-	return count
+	ratio := float32(count / len(current))
+
+	myRGBRanges := rgbRanges{
+		redMax:   add(original[0].Color.R, 50),
+		redMin:   deduct(original[0].Color.R, 50),
+		greenMax: add(original[0].Color.G, 50),
+		greenMin: deduct(original[0].Color.G, 50),
+		blueMax:  add(original[0].Color.B, 50),
+		blueMin:  deduct(original[0].Color.B, 50),
+	}
+
+	//is the dominant colour similar?
+	matches := similarColor(current[0], myRGBRanges)
+	matchesProportions := similarOccurences(uint32(current[0].Cnt), uint32(original[0].Cnt))
+
+	if ratio <= 0.5 {
+		if (matches && matchesProportions) && ratio >= 0.2 {
+			return true
+		}
+	} else {
+		return true
+	}
+
+	return false
+}
+
+func add(colorVal uint32, valToChange uint32) uint32 {
+	changed := int(colorVal) - int(valToChange)
+
+	if changed > 255 {
+		return 255
+	}
+
+	return colorVal + valToChange
+}
+
+func deduct(colorVal uint32, valToChange uint32) uint32 {
+	changed := int(colorVal) - int(valToChange)
+
+	if changed < 0 {
+		return 0
+	}
+
+	return colorVal - valToChange
 }
 
 func Combinations(iterable []prominentcolor.ColorItem, r int) (rt [][]prominentcolor.ColorItem) {
@@ -521,12 +580,12 @@ func rgbDiff(
 	difference uint32) (colors prominentcolor.ColorItem, matches bool, index int) {
 
 	myRGBRanges := rgbRanges{
-		redMax:   color.Color.R + difference,
-		redMin:   color.Color.R - difference,
-		greenMax: color.Color.G + difference,
-		greenMin: color.Color.G - difference,
-		blueMax:  color.Color.B + difference,
-		blueMin:  color.Color.B - difference,
+		redMax:   add(color.Color.R, difference),
+		redMin:   deduct(color.Color.R, difference),
+		greenMax: add(color.Color.G, difference),
+		greenMin: deduct(color.Color.G, difference),
+		blueMax:  add(color.Color.B, difference),
+		blueMin:  deduct(color.Color.B, difference),
 	}
 
 	for i, c := range originalColorScheme {
