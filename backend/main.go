@@ -9,6 +9,7 @@ import (
 	"image"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -17,6 +18,7 @@ import (
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/hisamafahri/coco"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
@@ -467,6 +469,21 @@ func searchAlbums(
 	return ch, nil
 }
 
+func compareArtwork_new(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
+	palette_len := len(original)
+
+	difference := 20
+	for i := 0; i < palette_len; i++ {
+		if betterSimilarColor(original[i], current[i], difference) {
+			difference += 10	
+		}
+		else {
+			return false
+		}
+	}
+	return true
+}
+
 func compareArtwork(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
 
 	// concept: add priority to the colors
@@ -601,6 +618,47 @@ func removeSimilarColor(
 	originalColorScheme []prominentcolor.ColorItem) []prominentcolor.ColorItem {
 	newColorScheme := originalColorScheme[:6]
 	return newColorScheme
+}
+
+func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.ColorItem, difference int) bool {
+	color1_lab := coco.Rgb2Lab(float64(color1.Color.R), float64(color1.Color.G), float64(color1.Color.B))
+	color2_lab := coco.Rgb2Lab(float64(color2.Color.R), float64(color2.Color.G), float64(color2.Color.B))
+	
+	color1_L := color1_lab[0]
+	color2_L := color2_lab[0]
+	color1_a := color1_lab[1]
+	color2_a := color2_lab[1]
+	color1_b := color1_lab[2]
+	color2_b := color2_lab[2]
+
+	// For graphic arts
+	kl := 1
+	k1 := 0.045
+	k2 := 0.015
+	kc := float64(1)
+	kh := float64(1)
+
+	delta_L := color1_L - color2_L
+	c1 := math.Sqrt(math.Pow(color1_a, 2) + math.Pow(color1_b, 2))
+	c2 := math.Sqrt(math.Pow(color2_a, 2) + math.Pow(color2_b, 2))
+	delta_c := c1 - c2
+	delta_a := color1_a - color2_a
+	delta_b := color1_b - color2_b
+	delta_h := math.Sqrt(math.Pow(delta_a, 2) + math.Pow(delta_b, 2) - math.Pow(delta_c, 2))
+	sl := 1
+	sc := 1 + k1 * c1
+	sh := 1 + k2 * c1
+
+	delta_e := math.Sqrt(math.Pow((delta_L / float64(kl * sl)), 2) + math.Pow((delta_c / float64(kc * sc)), 2) + math.Pow((delta_h / kh * sh), 2))
+	
+	/* Delta E Values:
+	<= 1 --> not perceptible
+	1-2 --> perceptible close observation
+	2-10 --> perceptible at glance
+	11-49 --> colors more similar than opposite
+	100 --> colors exactly opposite
+	*/
+	return delta_e <= float64(difference)
 }
 
 func similarColor(color prominentcolor.ColorItem, rgb rgbRanges) bool {
