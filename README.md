@@ -29,7 +29,3 @@ https://docs.google.com/document/d/1eVjes-pO3xvfwdHUF0d7mZ8O56oZ-w6KAXtYMC7PvaQ/
         - Add new recommendations to existing playlist
     - Additional requirements: authentication methods
 - Once recommended albums generated, take 3+ songs from each album and create a playlist
-
-#### Research
-- Similar color algo
-    - https://en.wikipedia.org/wiki/Color_difference#sRGB
