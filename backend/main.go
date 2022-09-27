@@ -1,9 +1,18 @@
 package main
 
 import (
+	"cloud.google.com/go/firestore"
 	"context"
 	"encoding/json"
+	firebase "firebase.google.com/go"
 	"fmt"
+	"github.com/EdlinOrg/prominentcolor"
+	"github.com/gin-gonic/contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
+	"google.golang.org/api/option"
 	Generator "hueify/generator"
 	Queue "hueify/queue"
 	"image"
@@ -13,13 +22,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/EdlinOrg/prominentcolor"
-	"github.com/gin-gonic/contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/zmb3/spotify"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
 )
 
 type Options spotify.Options
@@ -48,6 +50,7 @@ type AlbumRes struct {
 	ImageColors        []prominentcolor.ColorItem `json:"image_colors"`
 	RelatedArtists     []string                   `json:"related_artists"`
 	RelatedArtistsURIs []string                   `json:"related_artists_uri"`
+	NewReq             bool                       `json:"new_request"`
 }
 
 type Info struct {
@@ -75,7 +78,37 @@ var authConfig *clientcredentials.Config
 var accessToken *oauth2.Token
 var client spotify.Client
 
+var ctx context.Context
+var sa option.ClientOption
+var app *firebase.App
+var firestoreClient *firestore.Client
+
+var firebaseErr error
+var clientErr error
+
 func main() {
+	var err error
+
+	//set up Firestore for artist metadata (related artists)
+	ctx = context.Background()
+	sa = option.WithCredentialsFile("./firebase.json")
+	app, firebaseErr = firebase.NewApp(ctx, nil, sa)
+	if firebaseErr != nil {
+		log.Fatalln(firebaseErr)
+	}
+
+	firestoreClient, clientErr = app.Firestore(ctx)
+	if clientErr != nil {
+		log.Fatalln(clientErr)
+	}
+
+	defer func(client *firestore.Client) {
+		err := client.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}(firestoreClient)
+
 	//Generator.DrawPlayistCover(255, 40, 150, 30, 200, 100)
 
 	authConfig = &clientcredentials.Config{
@@ -84,7 +117,6 @@ func main() {
 		TokenURL:     spotify.TokenURL,
 	}
 
-	var err error
 	accessToken, err = authConfig.Token(context.Background())
 	if err != nil {
 		log.Fatalf("error retrieve access token: %v", err)
@@ -170,7 +202,13 @@ func getAlbumReq(c *gin.Context) {
 	}
 
 	var res AlbumRes
-	json.Unmarshal(b, &res)
+	err = json.Unmarshal(b, &res)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to json unmarshal album",
+			"error":   err,
+		})
+	}
 
 	//Use c.JSON() instead in production
 	//as indentedJson is CPU intensive
@@ -180,6 +218,8 @@ func getAlbumReq(c *gin.Context) {
 func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 
 	var id string
+	var newReq bool
+
 	if isURI {
 		id = strings.Split(identifier, ":")[2]
 	} else {
@@ -193,6 +233,13 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 		//	"message": "error retrieve album data",
 		//	"error":   err,
 		//})
+	}
+
+	_, err = firestoreClient.Doc(album.Name).Get(ctx)
+	if err != nil {
+		newReq = true
+	} else {
+		newReq = false
 	}
 
 	img, err := loadImage(album.Images[0].URL)
@@ -241,6 +288,7 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 		ImageColors:        noCroppingColours,
 		RelatedArtists:     relatedArtistsNames,
 		RelatedArtistsURIs: relatedArtistsURIs,
+		NewReq:             newReq,
 	}
 
 	return albumRes, nil
@@ -301,6 +349,14 @@ func getAllRelatedArtists(id spotify.ID) ([]RelatedArtistInfo, error) {
 	sort.Slice(listOfRelated, func(d, e int) bool {
 		return listOfRelated[d].Popularity > listOfRelated[e].Popularity
 	})
+
+	//add to firestore
+	_, err = firestoreClient.Collection("artists").Doc(artist.Name).Create(ctx, map[string]interface{}{
+		"related": listOfRelated,
+	})
+	if err != nil {
+		log.Fatalf("Failed adding artist to firestore: %v", err)
+	}
 
 	return listOfRelated, nil
 }
@@ -364,19 +420,13 @@ func getNewAlbums(c *gin.Context) {
 	//split related artists list into 3 slices
 	//for len(recommended) != cap(recommended) {
 	//	go func() {
-	//		recommended, err = searchAlbums(relatedArtists[:len(relatedArtists)*(1/3)], originalColorScheme, recommended, c)
+	//		recommended, err = searchAlbums(relatedArtists[:len(relatedArtists)/2], originalColorScheme, recommended, c)
 	//		if err != nil {
 	//
 	//		}
 	//	}()
 	//	go func() {
-	//		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(1/3):len(relatedArtists)*(2/3)], originalColorScheme, recommended, c)
-	//		if err != nil {
-	//
-	//		}
-	//	}()
-	//	go func() {
-	//		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(2/3):], originalColorScheme, recommended, c)
+	//		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)/2:], originalColorScheme, recommended, c)
 	//		if err != nil {
 	//
 	//		}
@@ -476,7 +526,7 @@ func compareArtwork(original []prominentcolor.ColorItem, current []prominentcolo
 	count := 0
 
 	for _, currentColor := range current {
-		color, matches, index := rgbDiff(currentColor, original, 25)
+		color, matches, index := rgbDiff(currentColor, original, 50)
 		if matches {
 			if similarOccurences(uint32(color.Cnt), uint32(original[index].Cnt)) {
 				count = count + 1

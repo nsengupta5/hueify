@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "hueify",
+  "private_key_id": "17999d4f6546bce84cdc449cec93d509f29397bd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC4OWQdO7mh2476\nuLAsV/qVhhBua8+PKQ1nXyTNaVB1u8hakgktufbs6TyM3Juzea2YhjHhyFajHpc1\ndKu54g8Fm+cTfGwiEHev3kl2uzh2fyp+2/bbQBiASY/Tkn4bZ1Lb3LTbvnPU8aGE\nAv2L0damivUDW3Mfy3FzzJgRwDwc/Emi7bhItLoSHrfRUD9g1TnUmduOtF2V+52g\nAvmYMiQ2bRnGlPY/qBJrzGeExqKdCeOjJL7oZlcbXid3Z9GG9ChPpRfm/8M5g8sM\n4HTiG/QY/mOcF1/15AtYfPDkBJC321ECsik/TEJCOzpPd+viYu49aArg+41uDhxJ\nVohLF3mVAgMBAAECggEAA7XU3EQylqiFSRY/psD7MRg9tqTxYvd8x4nHxA2nMHEr\nVZb5MYR8N+TG/VTzG4AA8ksKRaXDMu6qinR9V0AkNSTLmF2fkDxnK1xYJpiaMu7C\n5G0Ehta+t5S5CBXm+CEnrs8Tjb/DSvUL36IEyRRdP5uZrYCMbBtCP3FjLautZO2v\nX0PjPwzKm0MFNaCZLAsj7L4ZXFaHnufiFuCPbQkpL57YrUpJJmu+X/2LMBorGP5H\n0tIOKNPHctcDaFC73ChEtjkO6t65f6vCjtXB99be2E/+W3T7uFwlWfATOjqYUxDn\nHITTq/IBqJnS1t6uF8WGFurbbwBj1VxOPZXWodWkCQKBgQD0aNog4IulFm2Fknci\nhFDKwIeybHUz6YaVlmVEgqzS5cBxGCAbVKzkcPllNbdAQf4I75IuIYF6KqlAqj43\nlmAzaz4hVBLiIfzQRgWrxYpweOz+0UAEYWKpdqE1wT8E7BKsXEwGcWO9A7rw0zUC\n3LEcCnJYgU9r+Rlm+9O9Q8bT2QKBgQDA9eJsJs7AP5EaVBc7em4q/eQkTBSpviNp\nOLN7+qAe6fiEYtKT5DrJb2OIdnXM5pX3nOt65jqmOQq1orVLFlM8BpDtLmHfrHba\ndyTZQWLI2L/R/yiGQ4IRlhHgSIN2fqj6fSGuvHNOF7K1vM+pZjpCvBgJ+GUgvt97\ntEH0c8MKHQKBgDdvxPIqHGKQqLzgUNdqbazfaKgGw7rHoDgzybp1bV/Urwa38yhf\n12tlWJwlR/ByR32dYWnHPcgI/yTkuIIBQMbI72m92R6jmOVgzI5+mv0R4KeXrM6R\njEBl4QEBWRrztPSVZsUbWQUZYICZV2/TwPRcRj1e7zXNZX6fZhKK2gFZAoGAeBSM\nY2GDKIBmfEv4aTs3c+msICp4cWmx/7kZeP3ux04zKa+V/BL7wn9fIX0WsfyNNxqg\nMEs2FFtLHt2ylJfAFIrBhdhncBqTnECo3cqi/vpj5Ps07Nj2CJurZDe8F/Galsdo\nPqVn3CFDRXXKhVDo0L7c9tdtl4Mw8Hqs0MN5jMECgYEAx8RTZWZgMajErDzF0ovG\nQH+8gG9zMXLcsWQJj2oQmM2KDpY6QkVcNGhBHRs3VFKA1OxE53g++kmWePHRQ4Ke\nHSzxZJ9PGOppo73pg4cMmhUxNmFDCXAGCcuA2PYIv5CXQxKw+y9PakM775BZIcQq\nmS2/E4ELwLhNp8QXelE6pAo=\n-----END PRIVATE KEY-----\n",
+  "client_email": "hueifyservice@hueify.iam.gserviceaccount.com",
+  "client_id": "112562404522316361909",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/hueifyservice%40hueify.iam.gserviceaccount.com"
+}
