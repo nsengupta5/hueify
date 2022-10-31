@@ -67,7 +67,7 @@ const AlbumSearch = () => {
         {Object.keys(album).length !== 0 &&
         <div>
             <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
-            <Text text={"This is a new request"} loading={true}/>
+            {album.new_request === true ? <Text text={"This is a new request"} loading={album.new_request}/> : <></>}
         </div>
         }
         </>

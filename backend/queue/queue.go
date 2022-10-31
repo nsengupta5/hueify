@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -12,7 +11,7 @@ func New() [][]string {
 
 func Enqueue(queue [][]string, element []string) [][]string {
 	queue = append(queue, element) // Simply append to enqueue.
-	fmt.Println("Enqueued:", element)
+	//fmt.Println("Enqueued:", element)
 	return queue
 }
 
@@ -23,6 +22,6 @@ func Dequeue(queue [][]string) ([][]string, string, string, int) {
 	if err != nil {
 		return queue, "", "", -1
 	}
-	fmt.Println("Dequeued:", element)
+	//fmt.Println("Dequeued:", element)
 	return queue[1:], info[0], info[1], depth // Slice off the element once it is dequeued.
 }
