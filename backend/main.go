@@ -364,26 +364,26 @@ func getNewAlbums(c *gin.Context) {
 	originalColorScheme := album.ImageColors
 
 	//split related artists list into 3 slices
-	// for len(recommended) != cap(recommended) {
-	// 	go func() {
-	// 		recommended, err = searchAlbums(relatedArtists[:len(relatedArtists)*(1/3)], originalColorScheme, recommended, c)
-	// 		if err != nil {
-
-	// 		}
-	// 	}()
-	// 	go func() {
-	// 		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(1/3):len(relatedArtists)*(2/3)], originalColorScheme, recommended, c)
-	// 		if err != nil {
-	
-	// 		}
-	// 	}()
-	// 	go func() {
-	// 		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(2/3):], originalColorScheme, recommended, c)
-	// 		if err != nil {
-	
-	// 		}
-	// 	}()
-	// }
+	//for len(recommended) != cap(recommended) {
+	//	go func() {
+	//		recommended, err = searchAlbums(relatedArtists[:len(relatedArtists)*(1/3)], originalColorScheme, recommended, c)
+	//		if err != nil {
+	//
+	//		}
+	//	}()
+	//	go func() {
+	//		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(1/3):len(relatedArtists)*(2/3)], originalColorScheme, recommended, c)
+	//		if err != nil {
+	//
+	//		}
+	//	}()
+	//	go func() {
+	//		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(2/3):], originalColorScheme, recommended, c)
+	//		if err != nil {
+	//
+	//		}
+	//	}()
+	//}
 	recommended, err = searchAlbums(relatedArtists[0:50], originalColorScheme, recommended, c)
 
 	fmt.Println(&recommended)
@@ -428,7 +428,7 @@ func searchAlbums(
 			}
 
 			//compare colors to original color scheme
-			artworkIsSimilar := compareArtwork_new(originalColorScheme, colors)
+			artworkIsSimilar := compareArtwork(originalColorScheme, colors)
 
 			//if 50% match then write to channel
 			if visited := visitedAlbums[album.ID.String()]; artworkIsSimilar && !visited {
@@ -467,24 +467,6 @@ func searchAlbums(
 	}
 
 	return ch, nil
-}
-
-func compareArtwork_new(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
-	palette_len := len(original)
-
-	difference := float64(25)
-	for i := 0; i < palette_len / 2; i++ {
-		if betterSimilarColor(original[i], current[i]) <= difference {
-			if i == 0 {
-				difference += 2
-			} else {
-				difference += 5	
-			}
-		} else {
-			return false
-		}
-	}
-	return true
 }
 
 func compareArtwork(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
@@ -623,7 +605,7 @@ func removeSimilarColor(
 	return newColorScheme
 }
 
-func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.ColorItem) float64 {
+func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.ColorItem) bool {
 	color1_lab := coco.Rgb2Lab(float64(color1.Color.R), float64(color1.Color.G), float64(color1.Color.B))
 	color2_lab := coco.Rgb2Lab(float64(color2.Color.R), float64(color2.Color.G), float64(color2.Color.B))
 	
@@ -661,7 +643,7 @@ func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.C
 	11-49 --> colors more similar than opposite
 	100 --> colors exactly opposite
 	*/
-	return delta_e 
+	return delta_e <= 49
 }
 
 func similarColor(color prominentcolor.ColorItem, rgb rgbRanges) bool {
