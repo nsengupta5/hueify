@@ -466,55 +466,66 @@ func getNewAlbums(c *gin.Context) {
 	//originalColorScheme := request.ColorScheme
 	originalColorScheme := album.ImageColors
 
-	bound1 := float64(len(relatedArtists)) * 0.25
-	bound2 := float64(len(relatedArtists)) * 0.5
-	bound3 := float64(len(relatedArtists)) * 0.75
+	bound1 := float64(len(relatedArtists)) * 0.1
+	bound2 := float64(len(relatedArtists)) * 0.2
+	bound3 := float64(len(relatedArtists)) * 0.3
+	bound4 := float64(len(relatedArtists)) * 0.4
+	bound5 := float64(len(relatedArtists)) * 0.5
+	bound6 := float64(len(relatedArtists)) * 0.6
+	bound7 := float64(len(relatedArtists)) * 0.7
+	bound8 := float64(len(relatedArtists)) * 0.8
+	bound9 := float64(len(relatedArtists)) * 0.9
+	bounds := [10]int{0, int(bound1), int(bound2), int(bound3), int(bound4), int(bound5), int(bound6), int(bound7),
+		int(bound8), int(bound9)}
 
 	go func() {
-		err = searchAlbums(relatedArtists[:int(bound1)], originalColorScheme, recommended)
+		err = searchAlbums(relatedArtists[:bounds[0]], originalColorScheme, recommended)
 		if err != nil {
-			println(err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to get recommended albums",
+				"error":   err,
+			})
 		}
 	}()
+
+	for i := 1; i < len(bounds)-1; i++ {
+		go func(_i int) {
+			err = searchAlbums(relatedArtists[bounds[_i]:bounds[_i+1]], originalColorScheme, recommended)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+					"message": "Failed to get recommended albums",
+					"error":   err,
+				})
+			}
+		}(i)
+	}
+
 	go func() {
-		err = searchAlbums(relatedArtists[int(bound1):int(bound2)], originalColorScheme, recommended)
+		err = searchAlbums(relatedArtists[bounds[9]:], originalColorScheme, recommended)
 		if err != nil {
-			println(err)
-		}
-	}()
-	go func() {
-		err = searchAlbums(relatedArtists[int(bound2):int(bound3)], originalColorScheme, recommended)
-		if err != nil {
-			println(err)
-		}
-	}()
-	go func() {
-		err = searchAlbums(relatedArtists[int(bound3):], originalColorScheme, recommended)
-		if err != nil {
-			println(err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to get recommended albums",
+				"error":   err,
+			})
 		}
 	}()
 
 	//spin lock implementation
-
 	done := false
-	count := 0
+	//count := 0
 
 	for !done {
 		if len(recommended) == cap(recommended) {
 			done = true
 		} else {
 			//if new album added to channel then stream response
-			if len(recommended) > count {
-				count++
-				c.Stream(func(w io.Writer) bool {
-					if contents, ok := <-recommended; ok {
-						c.SSEvent("message", contents)
-						return false
-					}
-					return true
-				})
-			}
+			c.Stream(func(w io.Writer) bool {
+				if contents, ok := <-recommended; ok {
+					c.SSEvent("message", contents)
+					return false
+				}
+				return true
+			})
 		}
 	}
 
