@@ -12,7 +12,9 @@ const Layout = ({children}) => {
             <img src={logo} className="h-20 w-64" alt="logo" />
           </Link>
       </div>
-      <h2 className="flex font-blinker font-semibold text-lg justify-center mt-8">Discover new music based on album artwork!</h2>
+      <h2 className="flex font-blinker font-semibold text-lg justify-center mt-8" style={{textShadow: "1px 1px 2px black"}}>
+          Discover new music based on album artwork!
+      </h2>
       <main>{children}</main>
     </div>
   );

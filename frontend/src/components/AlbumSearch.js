@@ -12,6 +12,7 @@ const AlbumSearch = () => {
     const [recommendedAlbums, setRecommendedAlbums] = useState([])
     // const [recommendedAlbum, setRecommendedAlbum] = useState({})
     const [goClicked, setGoClicked] = useState(false)
+    const [renderNewAlbums, setNewRender] = useState(false)
 
     useEffect(() => {
         if (Object.keys(album).length !== 0){
@@ -36,13 +37,17 @@ const AlbumSearch = () => {
 
         source.onmessage = (event) => {
             const jsonData = JSON.parse(event.data);
-            console.log(jsonData)
-            setRecommendedAlbums([...recommendedAlbums, jsonData]);
+            setRecommendedAlbums(prevArray => [...prevArray, jsonData]);
             if (jsonData.endStream === true){
                 source.close()
             }
         }
     }
+
+    useEffect(() => {
+        console.log(recommendedAlbums)
+        setNewRender(true);
+    }, [recommendedAlbums]);
 
     return (
         <>
@@ -69,6 +74,20 @@ const AlbumSearch = () => {
             <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
             {album.new_request === true ? <Text text={"This is a new request"} loading={album.new_request}/> : <></>}
         </div>
+        }
+        {renderNewAlbums
+            ?
+            <div style={{display: "flex"}}>
+                {
+                    recommendedAlbums.map((rec) =>
+                        <div>
+                            <Album image={rec.image} name={rec.name} artist={rec.artists} colors={[]} />
+                        </div>
+                    )
+                }
+            </div>
+            :
+            <></>
         }
         </>
     )

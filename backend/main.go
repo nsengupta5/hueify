@@ -353,12 +353,14 @@ func getAllRelatedArtists(id spotify.ID) ([]RelatedArtistInfo, error) {
 
 	//add to firestore
 	//_, err = firestoreClient.Collection("artists").Doc(artist.Name).Set(ctx, listOfRelated)
-	_, err = firestoreClient.Collection("artists").Doc(artist.Name).Create(ctx, map[string]interface{}{
-		"related": listOfRelated,
-	})
-	if err != nil {
-		log.Fatalf("Failed adding artist to firestore: %v", err)
-	}
+
+	//UNCOMMENT LATER
+	//_, err = firestoreClient.Collection("artists").Doc(artist.Name).Create(ctx, map[string]interface{}{
+	//	"related": listOfRelated,
+	//})
+	//if err != nil {
+	//	log.Fatalf("Failed adding artist to firestore: %v", err)
+	//}
 
 	return listOfRelated, nil
 }
@@ -406,32 +408,57 @@ func getNewAlbums(c *gin.Context) {
 	}
 
 	var relatedArtists []RelatedArtistInfo
+	//var ok bool
 
-	if album.NewReq {
-		relatedArtists, err = getAllRelatedArtists(spotify.ID(artistId))
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to get related artists",
-				"error":   err,
-			})
-		}
-	} else {
-		artistDoc, err := firestoreClient.Doc("artists/" + album.Artist).Get(ctx)
-		coll := artistDoc.Data()
-		relatedArtistsInterface := coll["related"]
-		relatedArtists2, ok := relatedArtistsInterface.(RelatedArtistInfo)
-		if !ok {
-			println(ok)
-		}
-		fmt.Printf("Document: %#v\\n", relatedArtists2)
-
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to get related artists from firestore",
-				"error":   err,
-			})
-		}
+	//if album.NewReq {
+	relatedArtists, err = getAllRelatedArtists(spotify.ID(artistId))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get related artists",
+			"error":   err,
+		})
 	}
+	//} else {
+	//	artistDoc, err := firestoreClient.Collection("artists").Doc(album.Artist).Get(ctx)
+	//
+	//	artistDoc.DataTo(&relatedArtists);
+	//
+	//	if err != nil {
+	//		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+	//			"message": "Failed to get related artists",
+	//			"error":   err,
+	//		})
+	//	}
+	//	relatedArtistsInterface := artistDoc.Data()["related"]
+	//
+	//	switch reflect.TypeOf(relatedArtistsInterface).Kind() {
+	//	case reflect.Slice:
+	//		s := reflect.ValueOf(relatedArtistsInterface)
+	//
+	//		for i := 0; i < s.Len(); i++ {
+	//		}
+	//	}
+	//
+	//	//relatedArtistsInterface := coll["related"]
+	//
+	//	for _, relatedArtist := range relatedArtistsInterface.([]RelatedArtistInfo) {
+	//		relatedArtists = append(relatedArtists, relatedArtist)
+	//	}
+	//
+	//	//relatedArtists, ok := relatedArtistsInterface.([]RelatedArtistInfo)
+	//	//if !ok {
+	//	//	println(ok)
+	//	//}
+	//
+	//	fmt.Printf("Document: %#v\\n", relatedArtists)
+	//
+	//	if err != nil {
+	//		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+	//			"message": "Failed to get related artists from firestore",
+	//			"error":   err,
+	//		})
+	//	}
+	//}
 
 	//create channel which stores the recommended albums
 	recommended := make(chan RecommendedAlbum, 6)
@@ -439,28 +466,57 @@ func getNewAlbums(c *gin.Context) {
 	//originalColorScheme := request.ColorScheme
 	originalColorScheme := album.ImageColors
 
-	//split related artists list into 3 slices
-	// for len(recommended) != cap(recommended) {
-	// 	go func() {
-	// 		recommended, err = searchAlbums(relatedArtists[:len(relatedArtists)*(1/3)], originalColorScheme, recommended, c)
-	// 		if err != nil {
+	bound1 := float64(len(relatedArtists)) * 0.25
+	bound2 := float64(len(relatedArtists)) * 0.5
+	bound3 := float64(len(relatedArtists)) * 0.75
 
-	// 		}
-	// 	}()
-	// 	go func() {
-	// 		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(1/3):len(relatedArtists)*(2/3)], originalColorScheme, recommended, c)
-	// 		if err != nil {
+	go func() {
+		err = searchAlbums(relatedArtists[:int(bound1)], originalColorScheme, recommended)
+		if err != nil {
+			println(err)
+		}
+	}()
+	go func() {
+		err = searchAlbums(relatedArtists[int(bound1):int(bound2)], originalColorScheme, recommended)
+		if err != nil {
+			println(err)
+		}
+	}()
+	go func() {
+		err = searchAlbums(relatedArtists[int(bound2):int(bound3)], originalColorScheme, recommended)
+		if err != nil {
+			println(err)
+		}
+	}()
+	go func() {
+		err = searchAlbums(relatedArtists[int(bound3):], originalColorScheme, recommended)
+		if err != nil {
+			println(err)
+		}
+	}()
 
-	// 		}
-	// 	}()
-	// 	go func() {
-	// 		recommended, err = searchAlbums(relatedArtists[len(relatedArtists)*(2/3):], originalColorScheme, recommended, c)
-	// 		if err != nil {
+	//spin lock implementation
 
-	// 		}
-	// 	}()
-	// }
-	recommended, err = searchAlbums(relatedArtists[0:50], originalColorScheme, recommended, c)
+	done := false
+	count := 0
+
+	for !done {
+		if len(recommended) == cap(recommended) {
+			done = true
+		} else {
+			//if new album added to channel then stream response
+			if len(recommended) > count {
+				count++
+				c.Stream(func(w io.Writer) bool {
+					if contents, ok := <-recommended; ok {
+						c.SSEvent("message", contents)
+						return false
+					}
+					return true
+				})
+			}
+		}
+	}
 
 	fmt.Println(&recommended)
 	c.AbortWithStatus(http.StatusOK)
@@ -469,8 +525,10 @@ func getNewAlbums(c *gin.Context) {
 func searchAlbums(
 	relatedArtistsSlice []RelatedArtistInfo,
 	originalColorScheme []prominentcolor.ColorItem,
-	ch chan RecommendedAlbum,
-	c *gin.Context) (chan RecommendedAlbum, error) {
+	ch chan RecommendedAlbum) error {
+
+	var routineClient spotify.Client
+	routineClient = spotify.Authenticator{}.NewClient(accessToken)
 
 	visitedAlbums := map[string]bool{}
 
@@ -479,9 +537,9 @@ func searchAlbums(
 		println("looking at artist:" + strconv.Itoa(i))
 		//get albums
 		//id := strings.Split(artist.Id, ":")[2]
-		albums, err := client.GetArtistAlbums(spotify.ID(artist.Id))
+		albums, err := routineClient.GetArtistAlbums(spotify.ID(artist.Id))
 		if err != nil {
-			return ch, err
+			return err
 		}
 
 		for j, album := range albums.Albums {
@@ -495,12 +553,12 @@ func searchAlbums(
 			//get color scheme of album
 			img, err := loadImage(album.Images[0].URL)
 			if err != nil {
-				return ch, err
+				return err
 			}
 
 			colors, err := getColors(img)
 			if err != nil {
-				return ch, err
+				return err
 			}
 
 			//compare colors to original color scheme
@@ -527,14 +585,6 @@ func searchAlbums(
 
 				ch <- albumToReturn
 
-				c.Stream(func(w io.Writer) bool {
-					if contents, ok := <-ch; ok {
-						c.SSEvent("message", contents)
-						return false
-					}
-					return true
-				})
-
 				println("got an album")
 			} else {
 				visitedAlbums[album.ID.String()] = true
@@ -542,7 +592,7 @@ func searchAlbums(
 		}
 	}
 
-	return ch, nil
+	return nil
 }
 
 func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
