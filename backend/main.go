@@ -512,8 +512,6 @@ func getNewAlbums(c *gin.Context) {
 
 	//spin lock implementation
 	done := false
-	//count := 0
-
 	for !done {
 		if len(recommended) == cap(recommended) {
 			done = true
