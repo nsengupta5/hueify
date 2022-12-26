@@ -376,9 +376,6 @@ func getNewAlbums(c *gin.Context) {
 	//create channel which stores the recommended albums
 	recommended := make(chan Structs.RecommendedAlbum, 6)
 
-	//originalColorScheme := request.ColorScheme
-	originalColorScheme := album.ImageColors
-
 	bound1 := float64(len(relatedArtists)) * 0.1
 	bound2 := float64(len(relatedArtists)) * 0.2
 	bound3 := float64(len(relatedArtists)) * 0.3
@@ -392,7 +389,7 @@ func getNewAlbums(c *gin.Context) {
 		int(bound8), int(bound9)}
 
 	go func() {
-		err = searchAlbums(relatedArtists[:bounds[0]], originalColorScheme, recommended)
+		err = searchAlbums(relatedArtists[:bounds[0]], album, recommended)
 		if err != nil {
 			HttpError.GetRecommendedAlbumsFailure(c, err)
 		}
@@ -400,7 +397,7 @@ func getNewAlbums(c *gin.Context) {
 
 	for i := 1; i < len(bounds)-1; i++ {
 		go func(_i int) {
-			err = searchAlbums(relatedArtists[bounds[_i]:bounds[_i+1]], originalColorScheme, recommended)
+			err = searchAlbums(relatedArtists[bounds[_i]:bounds[_i+1]], album, recommended)
 			if err != nil {
 				HttpError.GetRecommendedAlbumsFailure(c, err)
 			}
@@ -408,7 +405,7 @@ func getNewAlbums(c *gin.Context) {
 	}
 
 	go func() {
-		err = searchAlbums(relatedArtists[bounds[9]:], originalColorScheme, recommended)
+		err = searchAlbums(relatedArtists[bounds[9]:], album, recommended)
 		if err != nil {
 			HttpError.GetRecommendedAlbumsFailure(c, err)
 		}
@@ -416,6 +413,8 @@ func getNewAlbums(c *gin.Context) {
 
 	//spin lock implementation
 	done := false
+	var latestAlbumReturned Structs.RecommendedAlbum
+	latestAlbumReturned = Structs.RecommendedAlbum{}
 	for !done {
 		if len(recommended) == cap(recommended) {
 			done = true
@@ -423,8 +422,11 @@ func getNewAlbums(c *gin.Context) {
 			//if new album added to channel then stream response
 			c.Stream(func(w io.Writer) bool {
 				if contents, ok := <-recommended; ok {
-					c.SSEvent("message", contents)
-					return false
+					if latestAlbumReturned.Id != contents.Id {
+						latestAlbumReturned = contents
+						c.SSEvent("message", contents)
+						return false
+					}
 				}
 				return true
 			})
@@ -435,20 +437,29 @@ func getNewAlbums(c *gin.Context) {
 	c.AbortWithStatus(http.StatusOK)
 }
 
+func exactAlbum(album spotify.SimpleAlbum, albumToCompareTo Structs.AlbumRes) bool {
+	if album.Artists[0].Name == albumToCompareTo.Artist && strings.Contains(album.Name, albumToCompareTo.AlbumName) {
+		return true
+	}
+	return false
+}
+
 func searchAlbums(
 	relatedArtistsSlice []Structs.RelatedArtistInfo,
-	originalColorScheme []prominentcolor.ColorItem,
+	originalAlbum Structs.AlbumRes,
 	ch chan Structs.RecommendedAlbum) error {
 
 	var routineClient spotify.Client
 	routineClient = spotify.Authenticator{}.NewClient(accessToken)
 
 	visitedAlbums := map[string]bool{}
+	originalColorScheme := originalAlbum.ImageColors
 
 	//for each artist
 	for i, artist := range relatedArtistsSlice {
 		println("looking at artist:" + strconv.Itoa(i))
 		//get albums
+
 		albums, err := routineClient.GetArtistAlbums(spotify.ID(artist.Id))
 		if err != nil {
 			return err
@@ -458,11 +469,21 @@ func searchAlbums(
 
 			println("looking at album:" + strconv.Itoa(j))
 
+			if exactAlbum(album, originalAlbum) {
+				continue
+			}
+
 			if visitedAlbums[album.ID.String()] {
 				continue
 			}
 
 			//get color scheme of album
+
+			//debug index out of range error for album.Images[0]
+			if len(album.Images) == 0 {
+				println(album)
+			}
+
 			img, err := loadImage(album.Images[0].URL)
 			if err != nil {
 				return err
@@ -488,6 +509,7 @@ func searchAlbums(
 					Name:      album.Name,
 					Artists:   album.Artists[0].Name,
 					Image:     album.Images[0].URL,
+					Colors:    colors,
 					EndStream: endStream,
 				}
 
@@ -495,7 +517,9 @@ func searchAlbums(
 
 				print(albumToReturn.Name)
 
-				ch <- albumToReturn
+				if album.AlbumType != "single" {
+					ch <- albumToReturn
+				}
 
 				println("got an album")
 			} else {
@@ -508,15 +532,12 @@ func searchAlbums(
 }
 
 func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
-	palette_len := len(original)
-
+	paletteLen := len(original)
 	difference := float64(25)
-	for i := 0; i < palette_len/2; i++ {
+	for i := 0; i < paletteLen/2; i++ {
 		if betterSimilarColor(original[i], current[i]) <= difference {
-			if i == 0 {
-				difference += 2
-			} else {
-				difference += 5
+			if i > 1 {
+				difference += 10
 			}
 		} else {
 			return false

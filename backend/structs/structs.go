@@ -45,10 +45,11 @@ type RecommendedAlbumReq struct {
 }
 
 type RecommendedAlbum struct {
-	Type      string `json:"type"`
-	Id        string `json:"id"`
-	Name      string `json:"name"`
-	Artists   string `json:"artists"`
-	Image     string `json:"image"`
-	EndStream bool   `json:"endStream"`
+	Type      string                     `json:"type"`
+	Id        string                     `json:"id"`
+	Name      string                     `json:"name"`
+	Artists   string                     `json:"artists"`
+	Image     string                     `json:"image"`
+	Colors    []prominentcolor.ColorItem `json:"colors"`
+	EndStream bool                       `json:"endStream"`
 }
