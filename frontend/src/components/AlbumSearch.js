@@ -79,11 +79,11 @@ const AlbumSearch = (props) => {
         }
         {renderNewAlbums
             ?
-            <div style={{display: "flex"}}>
+            <div style={{display: "flex", flexWrap: "wrap"}}>
                 {
                     recommendedAlbums.map((rec) =>
                         <div>
-                            <Album image={rec.image} name={rec.name} artist={rec.artists} colors={[]} />
+                            <Album image={rec.image} name={rec.name} artist={rec.artists} colors={rec.colors} />
                         </div>
                     )
                 }

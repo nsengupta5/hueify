@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"google.golang.org/api/option"
 	Generator "hueify/generator"
+	HttpError "hueify/http-errors"
 	Queue "hueify/queue"
+	Structs "hueify/structs"
 	"image"
 	"io"
 	"log"
@@ -26,56 +28,6 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
-
-type Options spotify.Options
-
-type Index interface {
-	uint16 | int
-}
-
-type rgbRanges struct {
-	redMax, redMin     uint32
-	greenMax, greenMin uint32
-	blueMax, blueMin   uint32
-}
-
-type RelatedArtistInfo struct {
-	Id         string
-	Popularity int32
-}
-
-type AlbumRes struct {
-	Artist             string                     `json:"artist"`
-	ArtistId           spotify.ID                 `json:"artist_id"`
-	AlbumImg           string                     `json:"album_image"`
-	AlbumName          string                     `json:"album_name"`
-	AlbumId            spotify.ID                 `json:"album_id"`
-	ImageColors        []prominentcolor.ColorItem `json:"image_colors"`
-	RelatedArtists     []string                   `json:"related_artists"`
-	RelatedArtistsURIs []string                   `json:"related_artists_uri"`
-	NewReq             bool                       `json:"new_request"`
-}
-
-type Info struct {
-	Related    map[string]Info
-	Popularity int
-}
-
-type ArtistRelations map[string]Info
-
-type RecommendedAlbumReq struct {
-	ColorScheme []prominentcolor.ColorItem `json:"colorScheme"`
-	URI         string                     `json:"uri"`
-}
-
-type RecommendedAlbum struct {
-	Type      string `json:"type"`
-	Id        string `json:"id"`
-	Name      string `json:"name"`
-	Artists   string `json:"artists"`
-	Image     string `json:"image"`
-	EndStream bool   `json:"endStream"`
-}
 
 var authConfig *clientcredentials.Config
 var accessToken *oauth2.Token
@@ -188,34 +140,25 @@ func getAlbumReq(c *gin.Context) {
 	album, err := getAlbum(uri, true)
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to retrieve album info",
-			"error":   err,
-		})
+		HttpError.AlbumInfoFailure(c, err)
 	}
 
 	b, err := json.Marshal(&album)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to json marshal album",
-			"error":   err,
-		})
+		HttpError.JSONSerializeFailure(c, err)
 	}
 
-	var res AlbumRes
+	var res Structs.AlbumRes
 	err = json.Unmarshal(b, &res)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to json unmarshal album",
-			"error":   err,
-		})
+		HttpError.JSONDeserializeFailure(c, err)
 	}
 	//Use c.JSON() instead in production
 	//as indentedJson is CPU intensive
 	c.IndentedJSON(http.StatusOK, res)
 }
 
-func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
+func getAlbum(identifier string, isURI bool) (Structs.AlbumRes, error) {
 
 	var id string
 	var newReq bool
@@ -228,15 +171,11 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 
 	album, err := client.GetAlbum(spotify.ID(id))
 	if err != nil {
-		return AlbumRes{}, err
-		//c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-		//	"message": "error retrieve album data",
-		//	"error":   err,
-		//})
+		return Structs.AlbumRes{}, err
 	}
 
-	artistname := album.SimpleAlbum.Artists[0].Name
-	_, err = firestoreClient.Doc("artists/" + artistname).Get(ctx)
+	artistName := album.SimpleAlbum.Artists[0].Name
+	_, err = firestoreClient.Doc("artists/" + artistName).Get(ctx)
 	if err != nil {
 		newReq = true
 	} else {
@@ -245,32 +184,18 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 
 	img, err := loadImage(album.Images[0].URL)
 	if err != nil {
-		return AlbumRes{}, err
-		/*		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to load image",
-				"error":   err,
-			})*/
+		return Structs.AlbumRes{}, err
 	}
 
 	noCroppingColours, err := getColors(img)
 	if err != nil {
-		return AlbumRes{}, err
-		//c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-		//	"message": "Failed to process image",
-		//	"error":   err,
-		//})
+		return Structs.AlbumRes{}, err
 	}
 
 	relatedArtists, err := client.GetRelatedArtists(album.Artists[0].ID)
 	if err != nil {
-		return AlbumRes{}, err
-		//c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-		//	"message": "Failed to get related artists",
-		//	"error":   err,
-		//})
+		return Structs.AlbumRes{}, err
 	}
-
-	//noCroppingColours = removeSimilarColor(noCroppingColours)
 
 	relatedArtistsURIs := make([]string, 0)
 	relatedArtistsNames := make([]string, 0)
@@ -280,7 +205,7 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 		relatedArtistsNames = append(relatedArtistsNames, a.Name)
 	}
 
-	albumRes := AlbumRes{
+	albumRes := Structs.AlbumRes{
 		Artist:             album.Artists[0].Name,
 		ArtistId:           album.Artists[0].ID,
 		AlbumImg:           album.Images[0].URL,
@@ -296,8 +221,8 @@ func getAlbum(identifier string, isURI bool) (AlbumRes, error) {
 
 }
 
-func getAllRelatedArtists(id spotify.ID) ([]RelatedArtistInfo, error) {
-	relatedStruct := make(ArtistRelations)
+func getAllRelatedArtists(id spotify.ID) ([]Structs.RelatedArtistInfo, error) {
+	relatedStruct := make(Structs.ArtistRelations)
 	visitedArtists := make(map[string]bool)
 	queue := Queue.New()
 
@@ -322,7 +247,7 @@ func getAllRelatedArtists(id spotify.ID) ([]RelatedArtistInfo, error) {
 
 		artistPopularityInt, _ := strconv.Atoi(artistPopularity)
 
-		relatedStruct[artistID] = Info{relatedArtistNames, artistPopularityInt}
+		relatedStruct[artistID] = Structs.Info{Related: relatedArtistNames, Popularity: artistPopularityInt}
 
 		depth = depth + 1
 		for relatedArtistID, relatedArtistInfo := range relatedArtistNames {
@@ -336,13 +261,13 @@ func getAllRelatedArtists(id spotify.ID) ([]RelatedArtistInfo, error) {
 	}
 
 	//initialize slice
-	listOfRelated := make([]RelatedArtistInfo, 0)
+	listOfRelated := make([]Structs.RelatedArtistInfo, 0)
 
 	//convert map to slice. this makes the recommended albums process easier when dealing with slice (traversing is easy)
 	for key, value := range relatedStruct {
-		listOfRelated = append(listOfRelated, RelatedArtistInfo{key, int32(value.Popularity)})
+		listOfRelated = append(listOfRelated, Structs.RelatedArtistInfo{Id: key, Popularity: int32(value.Popularity)})
 		for childKey, childValue := range value.Related {
-			listOfRelated = append(listOfRelated, RelatedArtistInfo{childKey, int32(childValue.Popularity)})
+			listOfRelated = append(listOfRelated, Structs.RelatedArtistInfo{Id: childKey, Popularity: int32(childValue.Popularity)})
 		}
 	}
 
@@ -365,8 +290,8 @@ func getAllRelatedArtists(id spotify.ID) ([]RelatedArtistInfo, error) {
 	return listOfRelated, nil
 }
 
-func getRelatedArtists(relatedStruct ArtistRelations, id spotify.ID, count int) (related map[string]Info, length int, err error) {
-	relatedArtistsInfo := make(map[string]Info)
+func getRelatedArtists(relatedStruct Structs.ArtistRelations, id spotify.ID, count int) (related map[string]Structs.Info, length int, err error) {
+	relatedArtistsInfo := make(map[string]Structs.Info)
 
 	//fmt.Println("id", id)
 	relatedArtists, err := client.GetRelatedArtists(id)
@@ -379,7 +304,7 @@ func getRelatedArtists(relatedStruct ArtistRelations, id spotify.ID, count int) 
 			break
 		}
 		if _, has := relatedStruct[artist.ID.String()]; !has {
-			relatedArtistsInfo[artist.ID.String()] = Info{map[string]Info{}, artist.Popularity}
+			relatedArtistsInfo[artist.ID.String()] = Structs.Info{Related: map[string]Structs.Info{}, Popularity: artist.Popularity}
 		}
 	}
 
@@ -390,7 +315,7 @@ func getNewAlbums(c *gin.Context) {
 
 	c.Header("Content-Type", "text/event-stream")
 
-	//var request RecommendedAlbumReq
+	//var request Structs.RecommendedAlbumReq
 	//if err := c.ShouldBindJSON(&request); err != nil {
 	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	//	return
@@ -401,22 +326,16 @@ func getNewAlbums(c *gin.Context) {
 	album, err := getAlbum(albumId, false)
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "error retrieve album data",
-			"error":   err,
-		})
+		HttpError.AlbumInfoFailure(c, err)
 	}
 
-	var relatedArtists []RelatedArtistInfo
+	var relatedArtists []Structs.RelatedArtistInfo
 	//var ok bool
 
 	//if album.NewReq {
 	relatedArtists, err = getAllRelatedArtists(spotify.ID(artistId))
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to get related artists",
-			"error":   err,
-		})
+		HttpError.GetRelatedArtistsFailure(c, err)
 	}
 	//} else {
 	//	artistDoc, err := firestoreClient.Collection("artists").Doc(album.Artist).Get(ctx)
@@ -424,10 +343,7 @@ func getNewAlbums(c *gin.Context) {
 	//	artistDoc.DataTo(&relatedArtists);
 	//
 	//	if err != nil {
-	//		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-	//			"message": "Failed to get related artists",
-	//			"error":   err,
-	//		})
+	//		HttpError.GetRelatedArtistsFailure(c, err)
 	//	}
 	//	relatedArtistsInterface := artistDoc.Data()["related"]
 	//
@@ -453,18 +369,12 @@ func getNewAlbums(c *gin.Context) {
 	//	fmt.Printf("Document: %#v\\n", relatedArtists)
 	//
 	//	if err != nil {
-	//		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-	//			"message": "Failed to get related artists from firestore",
-	//			"error":   err,
-	//		})
+	//		HttpError.GetCachedRelatedArtistsFailure(c, err)
 	//	}
 	//}
 
 	//create channel which stores the recommended albums
-	recommended := make(chan RecommendedAlbum, 6)
-
-	//originalColorScheme := request.ColorScheme
-	originalColorScheme := album.ImageColors
+	recommended := make(chan Structs.RecommendedAlbum, 6)
 
 	bound1 := float64(len(relatedArtists)) * 0.1
 	bound2 := float64(len(relatedArtists)) * 0.2
@@ -479,41 +389,32 @@ func getNewAlbums(c *gin.Context) {
 		int(bound8), int(bound9)}
 
 	go func() {
-		err = searchAlbums(relatedArtists[:bounds[0]], originalColorScheme, recommended)
+		err = searchAlbums(relatedArtists[:bounds[0]], album, recommended)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to get recommended albums",
-				"error":   err,
-			})
+			HttpError.GetRecommendedAlbumsFailure(c, err)
 		}
 	}()
 
 	for i := 1; i < len(bounds)-1; i++ {
 		go func(_i int) {
-			err = searchAlbums(relatedArtists[bounds[_i]:bounds[_i+1]], originalColorScheme, recommended)
+			err = searchAlbums(relatedArtists[bounds[_i]:bounds[_i+1]], album, recommended)
 			if err != nil {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"message": "Failed to get recommended albums",
-					"error":   err,
-				})
+				HttpError.GetRecommendedAlbumsFailure(c, err)
 			}
 		}(i)
 	}
 
 	go func() {
-		err = searchAlbums(relatedArtists[bounds[9]:], originalColorScheme, recommended)
+		err = searchAlbums(relatedArtists[bounds[9]:], album, recommended)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to get recommended albums",
-				"error":   err,
-			})
+			HttpError.GetRecommendedAlbumsFailure(c, err)
 		}
 	}()
 
 	//spin lock implementation
 	done := false
-	//count := 0
-
+	var latestAlbumReturned Structs.RecommendedAlbum
+	latestAlbumReturned = Structs.RecommendedAlbum{}
 	for !done {
 		if len(recommended) == cap(recommended) {
 			done = true
@@ -521,8 +422,11 @@ func getNewAlbums(c *gin.Context) {
 			//if new album added to channel then stream response
 			c.Stream(func(w io.Writer) bool {
 				if contents, ok := <-recommended; ok {
-					c.SSEvent("message", contents)
-					return false
+					if latestAlbumReturned.Id != contents.Id {
+						latestAlbumReturned = contents
+						c.SSEvent("message", contents)
+						return false
+					}
 				}
 				return true
 			})
@@ -533,21 +437,29 @@ func getNewAlbums(c *gin.Context) {
 	c.AbortWithStatus(http.StatusOK)
 }
 
+func exactAlbum(album spotify.SimpleAlbum, albumToCompareTo Structs.AlbumRes) bool {
+	if album.Artists[0].Name == albumToCompareTo.Artist && strings.Contains(album.Name, albumToCompareTo.AlbumName) {
+		return true
+	}
+	return false
+}
+
 func searchAlbums(
-	relatedArtistsSlice []RelatedArtistInfo,
-	originalColorScheme []prominentcolor.ColorItem,
-	ch chan RecommendedAlbum) error {
+	relatedArtistsSlice []Structs.RelatedArtistInfo,
+	originalAlbum Structs.AlbumRes,
+	ch chan Structs.RecommendedAlbum) error {
 
 	var routineClient spotify.Client
 	routineClient = spotify.Authenticator{}.NewClient(accessToken)
 
 	visitedAlbums := map[string]bool{}
+	originalColorScheme := originalAlbum.ImageColors
 
 	//for each artist
 	for i, artist := range relatedArtistsSlice {
 		println("looking at artist:" + strconv.Itoa(i))
 		//get albums
-		//id := strings.Split(artist.Id, ":")[2]
+
 		albums, err := routineClient.GetArtistAlbums(spotify.ID(artist.Id))
 		if err != nil {
 			return err
@@ -557,11 +469,21 @@ func searchAlbums(
 
 			println("looking at album:" + strconv.Itoa(j))
 
+			if exactAlbum(album, originalAlbum) {
+				continue
+			}
+
 			if visitedAlbums[album.ID.String()] {
 				continue
 			}
 
 			//get color scheme of album
+
+			//debug index out of range error for album.Images[0]
+			if len(album.Images) == 0 {
+				println(album)
+			}
+
 			img, err := loadImage(album.Images[0].URL)
 			if err != nil {
 				return err
@@ -581,12 +503,13 @@ func searchAlbums(
 
 				endStream := len(ch) == cap(ch)
 
-				albumToReturn := RecommendedAlbum{
+				albumToReturn := Structs.RecommendedAlbum{
 					Type:      album.AlbumType,
 					Id:        album.ID.String(),
 					Name:      album.Name,
 					Artists:   album.Artists[0].Name,
 					Image:     album.Images[0].URL,
+					Colors:    colors,
 					EndStream: endStream,
 				}
 
@@ -594,7 +517,9 @@ func searchAlbums(
 
 				print(albumToReturn.Name)
 
-				ch <- albumToReturn
+				if album.AlbumType != "single" {
+					ch <- albumToReturn
+				}
 
 				println("got an album")
 			} else {
@@ -607,64 +532,18 @@ func searchAlbums(
 }
 
 func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
-	palette_len := len(original)
-
+	paletteLen := len(original)
 	difference := float64(25)
-	for i := 0; i < palette_len/2; i++ {
+	for i := 0; i < paletteLen/2; i++ {
 		if betterSimilarColor(original[i], current[i]) <= difference {
-			if i == 0 {
-				difference += 2
-			} else {
-				difference += 5
+			if i > 1 {
+				difference += 10
 			}
 		} else {
 			return false
 		}
 	}
 	return true
-}
-
-func compareArtwork(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
-
-	// concept: add priority to the colors
-	//sort based on count
-	// create diff variable
-
-	count := 0
-
-	for _, currentColor := range current {
-		color, matches, index := rgbDiff(currentColor, original, 25)
-		if matches {
-			if similarOccurences(uint32(color.Cnt), uint32(original[index].Cnt)) {
-				count = count + 1
-			}
-		}
-	}
-
-	ratio := float32(count / len(current))
-
-	myRGBRanges := rgbRanges{
-		redMax:   add(original[0].Color.R, 50),
-		redMin:   deduct(original[0].Color.R, 50),
-		greenMax: add(original[0].Color.G, 50),
-		greenMin: deduct(original[0].Color.G, 50),
-		blueMax:  add(original[0].Color.B, 50),
-		blueMin:  deduct(original[0].Color.B, 50),
-	}
-
-	//is the dominant colour similar?
-	matches := similarColor(current[0], myRGBRanges)
-	matchesProportions := similarOccurences(uint32(current[0].Cnt), uint32(original[0].Cnt))
-
-	if ratio <= 0.5 {
-		if (matches && matchesProportions) && ratio >= 0.2 {
-			return true
-		}
-	} else {
-		return true
-	}
-
-	return false
 }
 
 func add(colorVal uint32, valToChange uint32) uint32 {
@@ -687,62 +566,18 @@ func deduct(colorVal uint32, valToChange uint32) uint32 {
 	return colorVal - valToChange
 }
 
-func Combinations(iterable []prominentcolor.ColorItem, r int) (rt [][]prominentcolor.ColorItem) {
-	pool := iterable
-	n := len(pool)
-
-	if r > n {
-		return
-	}
-
-	indices := make([]int, r)
-	for i := range indices {
-		indices[i] = i
-	}
-
-	result := make([]prominentcolor.ColorItem, r)
-	for i, el := range indices {
-		result[i] = pool[el]
-	}
-	s2 := make([]prominentcolor.ColorItem, r)
-	copy(s2, result)
-	rt = append(rt, s2)
-
-	for {
-		i := r - 1
-		for ; i >= 0 && indices[i] == i+n-r; i -= 1 {
-		}
-
-		if i < 0 {
-			return
-		}
-
-		indices[i] += 1
-		for j := i + 1; j < r; j += 1 {
-			indices[j] = indices[j-1] + 1
-		}
-
-		for ; i < len(indices); i += 1 {
-			result[i] = pool[indices[i]]
-		}
-		s2 = make([]prominentcolor.ColorItem, r)
-		copy(s2, result)
-		rt = append(rt, s2)
-	}
-}
-
 func rgbDiff(
 	color prominentcolor.ColorItem,
 	originalColorScheme []prominentcolor.ColorItem,
 	difference uint32) (colors prominentcolor.ColorItem, matches bool, index int) {
 
-	myRGBRanges := rgbRanges{
-		redMax:   add(color.Color.R, difference),
-		redMin:   deduct(color.Color.R, difference),
-		greenMax: add(color.Color.G, difference),
-		greenMin: deduct(color.Color.G, difference),
-		blueMax:  add(color.Color.B, difference),
-		blueMin:  deduct(color.Color.B, difference),
+	myRGBRanges := Structs.RGBRanges{
+		RedMax:   add(color.Color.R, difference),
+		RedMin:   deduct(color.Color.R, difference),
+		GreenMax: add(color.Color.G, difference),
+		GreenMin: deduct(color.Color.G, difference),
+		BlueMax:  add(color.Color.B, difference),
+		BlueMin:  deduct(color.Color.B, difference),
 	}
 
 	for i, c := range originalColorScheme {
@@ -801,10 +636,10 @@ func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.C
 	return delta_e
 }
 
-func similarColor(color prominentcolor.ColorItem, rgb rgbRanges) bool {
-	isSimilarRed := color.Color.R <= rgb.redMax && color.Color.R >= rgb.redMin
-	isSimilarGreen := color.Color.G <= rgb.greenMax && color.Color.G >= rgb.greenMin
-	isSimilarBlue := color.Color.B <= rgb.blueMax && color.Color.B >= rgb.blueMin
+func similarColor(color prominentcolor.ColorItem, rgb Structs.RGBRanges) bool {
+	isSimilarRed := color.Color.R <= rgb.RedMax && color.Color.R >= rgb.RedMin
+	isSimilarGreen := color.Color.G <= rgb.GreenMax && color.Color.G >= rgb.GreenMin
+	isSimilarBlue := color.Color.B <= rgb.BlueMax && color.Color.B >= rgb.BlueMin
 
 	if isSimilarRed && isSimilarGreen && isSimilarBlue {
 		return true
@@ -826,7 +661,7 @@ func similarOccurences(occurences uint32, comparingToOccurences uint32) bool {
 	return false
 }
 
-func remove[T any, K Index](s []T, i K) []T {
+func remove[T any, K Structs.Index](s []T, i K) []T {
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
 }
