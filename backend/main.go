@@ -481,7 +481,6 @@ func searchAlbums(
 
 			//debug index out of range error for album.Images[0]
 			if len(album.Images) == 0 {
-				fmt.Println(album)
 				return nil	
 			}
 
