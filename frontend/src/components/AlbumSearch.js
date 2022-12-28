@@ -79,7 +79,7 @@ const AlbumSearch = (props) => {
         }
         {renderNewAlbums
             ?
-            <div style={{display: "flex", flexWrap: "wrap"}}>
+            <div class="grid grid-cols-4 grid-flow-row gap-4">
                 {
                     recommendedAlbums.map((rec) =>
                         <div>

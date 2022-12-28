@@ -1,0 +1,109 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/nsengupta5/Documents/Personal_Projects/hueify/backend/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	//
+AlbumId	structs/structs.go	/^	AlbumId            spotify.ID                 `json:"album_id"`$/;"	m	struct:structs.AlbumRes	typeref:typename:spotify.ID
+AlbumImg	structs/structs.go	/^	AlbumImg           string                     `json:"album_image"`$/;"	m	struct:structs.AlbumRes	typeref:typename:string
+AlbumInfoFailure	http-errors/http-errors.go	/^func AlbumInfoFailure(c *gin.Context, err error) {$/;"	f	package:http_errors
+AlbumName	structs/structs.go	/^	AlbumName          string                     `json:"album_name"`$/;"	m	struct:structs.AlbumRes	typeref:typename:string
+AlbumRes	structs/structs.go	/^type AlbumRes struct {$/;"	s	package:structs
+Artist	structs/structs.go	/^	Artist             string                     `json:"artist"`$/;"	m	struct:structs.AlbumRes	typeref:typename:string
+ArtistId	structs/structs.go	/^	ArtistId           spotify.ID                 `json:"artist_id"`$/;"	m	struct:structs.AlbumRes	typeref:typename:spotify.ID
+ArtistRelations	structs/structs.go	/^type ArtistRelations map[string]Info$/;"	t	package:structs	typeref:typename:map[string]Info
+Artists	structs/structs.go	/^	Artists   string                     `json:"artists"`$/;"	m	struct:structs.RecommendedAlbum	typeref:typename:string
+BlueMax	structs/structs.go	/^	BlueMax, BlueMin   uint32$/;"	m	struct:structs.RGBRanges	typeref:typename:uint32
+BlueMin	structs/structs.go	/^	BlueMax, BlueMin   uint32$/;"	m	struct:structs.RGBRanges	typeref:typename:uint32
+ColorScheme	structs/structs.go	/^	ColorScheme []prominentcolor.ColorItem `json:"colorScheme"`$/;"	m	struct:structs.RecommendedAlbumReq	typeref:typename:[]prominentcolor.ColorItem
+Colors	structs/structs.go	/^	Colors    []prominentcolor.ColorItem `json:"colors"`$/;"	m	struct:structs.RecommendedAlbum	typeref:typename:[]prominentcolor.ColorItem
+Dequeue	queue/queue.go	/^func Dequeue(queue [][]string) ([][]string, string, string, int) {$/;"	f	package:queue	typeref:typename:([][]string, string, string, int)
+DrawPlayistCover	generator/artwork_gen.go	/^func DrawPlayistCover(primaryR, primaryG, primaryB, secondaryR, secondaryG, secondaryB uint8) (e/;"	f	package:generator	typeref:typename:(err error)
+EndStream	structs/structs.go	/^	EndStream bool                       `json:"endStream"`$/;"	m	struct:structs.RecommendedAlbum	typeref:typename:bool
+Enqueue	queue/queue.go	/^func Enqueue(queue [][]string, element []string) [][]string {$/;"	f	package:queue	typeref:typename:[][]string
+Generator	main.go	/^	Generator "hueify\/generator"$/;"	P	package:hueify/generator
+GetCachedRelatedArtistsFailure	http-errors/http-errors.go	/^func GetCachedRelatedArtistsFailure(c *gin.Context, err error) {$/;"	f	package:http_errors
+GetRecommendedAlbumsFailure	http-errors/http-errors.go	/^func GetRecommendedAlbumsFailure(c *gin.Context, err error) {$/;"	f	package:http_errors
+GetRelatedArtistsFailure	http-errors/http-errors.go	/^func GetRelatedArtistsFailure(c *gin.Context, err error) {$/;"	f	package:http_errors
+GreenMax	structs/structs.go	/^	GreenMax, GreenMin uint32$/;"	m	struct:structs.RGBRanges	typeref:typename:uint32
+GreenMin	structs/structs.go	/^	GreenMax, GreenMin uint32$/;"	m	struct:structs.RGBRanges	typeref:typename:uint32
+HttpError	main.go	/^	HttpError "hueify\/http-errors"$/;"	P	package:hueify/http-errors
+Id	structs/structs.go	/^	Id         string$/;"	m	struct:structs.RelatedArtistInfo	typeref:typename:string
+Id	structs/structs.go	/^	Id        string                     `json:"id"`$/;"	m	struct:structs.RecommendedAlbum	typeref:typename:string
+Image	structs/structs.go	/^	Image     string                     `json:"image"`$/;"	m	struct:structs.RecommendedAlbum	typeref:typename:string
+ImageColors	structs/structs.go	/^	ImageColors        []prominentcolor.ColorItem `json:"image_colors"`$/;"	m	struct:structs.AlbumRes	typeref:typename:[]prominentcolor.ColorItem
+Index	structs/structs.go	/^type Index interface {$/;"	i	package:structs
+Info	structs/structs.go	/^type Info struct {$/;"	s	package:structs
+JSONDeserializeFailure	http-errors/http-errors.go	/^func JSONDeserializeFailure(c *gin.Context, err error) {$/;"	f	package:http_errors
+JSONSerializeFailure	http-errors/http-errors.go	/^func JSONSerializeFailure(c *gin.Context, err error) {$/;"	f	package:http_errors
+Name	structs/structs.go	/^	Name      string                     `json:"name"`$/;"	m	struct:structs.RecommendedAlbum	typeref:typename:string
+New	queue/queue.go	/^func New() [][]string {$/;"	f	package:queue	typeref:typename:[][]string
+NewReq	structs/structs.go	/^	NewReq             bool                       `json:"new_request"`$/;"	m	struct:structs.AlbumRes	typeref:typename:bool
+Popularity	structs/structs.go	/^	Popularity int$/;"	m	struct:structs.Info	typeref:typename:int
+Popularity	structs/structs.go	/^	Popularity int32$/;"	m	struct:structs.RelatedArtistInfo	typeref:typename:int32
+Queue	main.go	/^	Queue "hueify\/queue"$/;"	P	package:hueify/queue
+RGBRanges	structs/structs.go	/^type RGBRanges struct {$/;"	s	package:structs
+RecommendedAlbum	structs/structs.go	/^type RecommendedAlbum struct {$/;"	s	package:structs
+RecommendedAlbumReq	structs/structs.go	/^type RecommendedAlbumReq struct {$/;"	s	package:structs
+RedMax	structs/structs.go	/^	RedMax, RedMin     uint32$/;"	m	struct:structs.RGBRanges	typeref:typename:uint32
+RedMin	structs/structs.go	/^	RedMax, RedMin     uint32$/;"	m	struct:structs.RGBRanges	typeref:typename:uint32
+Related	structs/structs.go	/^	Related    map[string]Info$/;"	m	struct:structs.Info	typeref:typename:map[string]Info
+RelatedArtistInfo	structs/structs.go	/^type RelatedArtistInfo struct {$/;"	s	package:structs
+RelatedArtists	structs/structs.go	/^	RelatedArtists     []string                   `json:"related_artists"`$/;"	m	struct:structs.AlbumRes	typeref:typename:[]string
+RelatedArtistsURIs	structs/structs.go	/^	RelatedArtistsURIs []string                   `json:"related_artists_uri"`$/;"	m	struct:structs.AlbumRes	typeref:typename:[]string
+Structs	main.go	/^	Structs "hueify\/structs"$/;"	P	package:hueify/structs
+Type	structs/structs.go	/^	Type      string                     `json:"type"`$/;"	m	struct:structs.RecommendedAlbum	typeref:typename:string
+URI	structs/structs.go	/^	URI         string                     `json:"uri"`$/;"	m	struct:structs.RecommendedAlbumReq	typeref:typename:string
+accessToken	main.go	/^var accessToken *oauth2.Token$/;"	v	package:main	typeref:typename:*oauth2.Token
+add	main.go	/^func add(colorVal uint32, valToChange uint32) uint32 {$/;"	f	package:main	typeref:typename:uint32
+app	main.go	/^var app *firebase.App$/;"	v	package:main	typeref:typename:*firebase.App
+authConfig	main.go	/^var authConfig *clientcredentials.Config$/;"	v	package:main	typeref:typename:*clientcredentials.Config
+auth_provider_x509_cert_url	firebase.json	/^  "auth_provider_x509_cert_url": "https:\/\/www.googleapis.com\/oauth2\/v1\/certs",$/;"	s
+auth_uri	firebase.json	/^  "auth_uri": "https:\/\/accounts.google.com\/o\/oauth2\/auth",$/;"	s
+betterSimilarColor	main.go	/^func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.ColorItem) float6/;"	f	package:main	typeref:typename:float64
+client	main.go	/^var client spotify.Client$/;"	v	package:main	typeref:typename:spotify.Client
+clientErr	main.go	/^var clientErr error$/;"	v	package:main	typeref:typename:error
+client_email	firebase.json	/^  "client_email": "hueifyservice@hueify.iam.gserviceaccount.com",$/;"	s
+client_id	firebase.json	/^  "client_id": "112562404522316361909",$/;"	s
+client_x509_cert_url	firebase.json	/^  "client_x509_cert_url": "https:\/\/www.googleapis.com\/robot\/v1\/metadata\/x509\/hueifyservic/;"	s
+compareArtworkNew	main.go	/^func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) /;"	f	package:main	typeref:typename:bool
+createPlaylist	main.go	/^func createPlaylist(c *gin.Context) {$/;"	f	package:main
+ctx	main.go	/^var ctx context.Context$/;"	v	package:main	typeref:typename:context.Context
+deduct	main.go	/^func deduct(colorVal uint32, valToChange uint32) uint32 {$/;"	f	package:main	typeref:typename:uint32
+exactAlbum	main.go	/^func exactAlbum(album spotify.SimpleAlbum, albumToCompareTo Structs.AlbumRes) bool {$/;"	f	package:main	typeref:typename:bool
+firebase	main.go	/^	firebase "firebase.google.com\/go"$/;"	P	package:firebase.google.com/go
+firebaseErr	main.go	/^var firebaseErr error$/;"	v	package:main	typeref:typename:error
+firestore	firestore/firestore.go	/^package firestore$/;"	p
+firestoreClient	main.go	/^var firestoreClient *firestore.Client$/;"	v	package:main	typeref:typename:*firestore.Client
+generator	generator/artwork_gen.go	/^package generator$/;"	p
+getAlbum	main.go	/^func getAlbum(identifier string, isURI bool) (Structs.AlbumRes, error) {$/;"	f	package:main	typeref:typename:(Structs.AlbumRes, error)
+getAlbumReq	main.go	/^func getAlbumReq(c *gin.Context) {$/;"	f	package:main
+getAllRelatedArtists	main.go	/^func getAllRelatedArtists(id spotify.ID) ([]Structs.RelatedArtistInfo, error) {$/;"	f	package:main	typeref:typename:([]Structs.RelatedArtistInfo, error)
+getAllRelatedArtistsReq	main.go	/^func getAllRelatedArtistsReq(c *gin.Context) {$/;"	f	package:main
+getColors	main.go	/^func getColors(img image.Image) ([]prominentcolor.ColorItem, error) {$/;"	f	package:main	typeref:typename:([]prominentcolor.ColorItem, error)
+getNewAlbums	main.go	/^func getNewAlbums(c *gin.Context) {$/;"	f	package:main
+getRelatedArtists	main.go	/^func getRelatedArtists(relatedStruct Structs.ArtistRelations, id spotify.ID, count int) (related/;"	f	package:main	typeref:typename:(related map[string]Structs.Info, length int, err error)
+http_errors	http-errors/http-errors.go	/^package http_errors$/;"	p
+loadImage	main.go	/^func loadImage(fileInput string) (image.Image, error) {$/;"	f	package:main	typeref:typename:(image.Image, error)
+main	main.go	/^func main() {$/;"	f	package:main
+main	main.go	/^package main$/;"	p
+main	main_test.go	/^package main$/;"	p
+private_key	firebase.json	/^  "private_key": "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIB/;"	s
+private_key_id	firebase.json	/^  "private_key_id": "17999d4f6546bce84cdc449cec93d509f29397bd",$/;"	s
+project_id	firebase.json	/^  "project_id": "hueify",$/;"	s
+queue	queue/queue.go	/^package queue$/;"	p
+remove	main.go	/^func remove[T any, K Structs.Index](s []T, i K) []T {$/;"	f	package:main	typeref:typename:(s []T, i K) [
+removeSimilarColor	main.go	/^func removeSimilarColor($/;"	f	package:main	typeref:typename:[]prominentcolor.ColorItem
+rgbDiff	main.go	/^func rgbDiff($/;"	f	package:main	typeref:typename:(colors prominentcolor.ColorItem, matches bool, index int)
+sa	main.go	/^var sa option.ClientOption$/;"	v	package:main	typeref:typename:option.ClientOption
+searchAlbums	main.go	/^func searchAlbums($/;"	f	package:main	typeref:typename:error
+similarColor	main.go	/^func similarColor(color prominentcolor.ColorItem, rgb Structs.RGBRanges) bool {$/;"	f	package:main	typeref:typename:bool
+similarOccurences	main.go	/^func similarOccurences(occurences uint32, comparingToOccurences uint32) bool {$/;"	f	package:main	typeref:typename:bool
+structs	structs/structs.go	/^package structs$/;"	p
+token_uri	firebase.json	/^  "token_uri": "https:\/\/oauth2.googleapis.com\/token",$/;"	s
+type	firebase.json	/^  "type": "service_account",$/;"	s

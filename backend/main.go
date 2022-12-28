@@ -533,7 +533,7 @@ func searchAlbums(
 
 func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
 	paletteLen := len(original)
-	difference := float64(25)
+	difference := float64(30)
 	for i := 0; i < paletteLen/2; i++ {
 		if betterSimilarColor(original[i], current[i]) <= difference {
 			if i > 1 {

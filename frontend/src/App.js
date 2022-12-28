@@ -5,7 +5,7 @@ import AlbumSearch from "./components/AlbumSearch";
 import { Link } from "react-router-dom";
 
 const App = () => {
-  const [backgroundColor, setBackgroundColor] = useState("#43baae");
+  const [backgroundColor, setBackgroundColor] = useState("#00d3ff");
 
   const getBackgroundImage = (data) => {
     console.log(data);
