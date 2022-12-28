@@ -156,6 +156,7 @@ func getAlbumReq(c *gin.Context) {
 	//Use c.JSON() instead in production
 	//as indentedJson is CPU intensive
 	c.IndentedJSON(http.StatusOK, res)
+	return
 }
 
 func getAlbum(identifier string, isURI bool) (Structs.AlbumRes, error) {
@@ -435,6 +436,7 @@ func getNewAlbums(c *gin.Context) {
 
 	fmt.Println(&recommended)
 	c.AbortWithStatus(http.StatusOK)
+	return
 }
 
 func exactAlbum(album spotify.SimpleAlbum, albumToCompareTo Structs.AlbumRes) bool {
