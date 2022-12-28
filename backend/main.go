@@ -481,7 +481,7 @@ func searchAlbums(
 
 			//debug index out of range error for album.Images[0]
 			if len(album.Images) == 0 {
-				return nil	
+				return nil
 			}
 
 			img, err := loadImage(album.Images[0].URL)
@@ -533,7 +533,7 @@ func searchAlbums(
 
 func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
 	paletteLen := len(original)
-	difference := float64(30)
+	difference := float64(25)
 	for i := 0; i < paletteLen/2; i++ {
 		if betterSimilarColor(original[i], current[i]) <= difference {
 			if i > 1 {

@@ -73,17 +73,17 @@ const AlbumSearch = (props) => {
         }
         {Object.keys(album).length !== 0 &&
         <div>
-            <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
+            <Album uri={album.album_id} image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
             {album.new_request === true ? <Text text={"This is a new request"} loading={album.new_request}/> : <></>}
         </div>
         }
         {renderNewAlbums
             ?
-            <div class="grid grid-cols-4 grid-flow-row gap-4">
+            <div className="grid grid-cols-4 grid-flow-row gap-4">
                 {
                     recommendedAlbums.map((rec) =>
                         <div>
-                            <Album image={rec.image} name={rec.name} artist={rec.artists} colors={rec.colors} />
+                            <Album uri={rec.id} image={rec.image} name={rec.name} artist={rec.artists} colors={rec.colors} />
                         </div>
                     )
                 }
