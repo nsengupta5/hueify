@@ -35,11 +35,11 @@ const Album = (props) => {
               </iframe>
               :
               <img onMouseOver={e => setOpenPlayer(true)} src={image} className="rounded-md" alt="album-cover" />
+              <h1 className="font-blinker mt-3 font-semibold text-lg">{name}</h1>
+              <h3 className="font-blinker font-semibold">{artist}</h3>
+              <Colors colors={colors} />
           }
       </div>
-      <h1 className="font-blinker mt-3 font-semibold text-lg">{name}</h1>
-      <h3 className="font-blinker font-semibold">{artist}</h3>
-      <Colors colors={colors} />
     </div>
   )
 }
