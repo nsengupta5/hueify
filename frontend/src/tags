@@ -1,0 +1,59 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/nsengupta5/Documents/Personal_Projects/hueify/frontend/src/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	//
+*	index.css	/^* {$/;"	s
+.fade-away	assets/text.css	/^.fade-away {$/;"	c
+.loading:after	assets/text.css	/^.loading:after {$/;"	c
+.text-box-slide-down	assets/text.css	/^.text-box-slide-down {$/;"	c
+.text-box-slide-down-off	assets/text.css	/^.text-box-slide-down-off{$/;"	c
+.text-box-slide-up	assets/text.css	/^.text-box-slide-up {$/;"	c
+Album	components/Album.js	/^const Album = (props) => {$/;"	f
+AlbumSearch	components/AlbumSearch.js	/^const AlbumSearch = (props) => {$/;"	f
+App	App.js	/^const App = () => {$/;"	f
+ColorPicker	components/ColorPicker.js	/^const ColorPicker = (props) => {$/;"	f
+Colors	components/Colors.js	/^const Colors = (props) => {$/;"	f
+GeneratePlaylist	components/GeneratePlaylist.js	/^const GeneratePlaylist = () =>{$/;"	f
+Layout	components/Layout.js	/^const Layout = ({children}) => {$/;"	f
+PlaylistCanvas	components/PlaylistCanvas.js	/^const PlaylistCanvas = (props) => {$/;"	f
+Text	components/Text.js	/^const Text = (props) => {$/;"	f
+animation	components/Text.js	/^            <div className={animation}>$/;"	M	variable:
+anonymousObject65206ee20305	components/GeneratePlaylist.js	/^            {$/;"	v
+children	components/Layout.js	/^const Layout = ({children}) => {$/;"	M
+color	components/ColorPicker.js	/^            <HexColorPicker color={color} onChange={setColor} \/>$/;"	M	variable:
+delay	components/Text.js	/^        const delay = t => new Promise(resolve => setTimeout(resolve, t));$/;"	f
+genPlaylist	components/GeneratePlaylist.js	/^    const genPlaylist = (event) => {$/;"	f
+getBackgroundImage	App.js	/^  const getBackgroundImage = (data) => {$/;"	f
+getRecommendedAlbums	components/AlbumSearch.js	/^    const getRecommendedAlbums = () => {$/;"	f
+isLoading	components/Text.js	/^                <span className={isLoading ? "font-blinker loading" : "font-blinker"}>{newText}</;"	M	variable:
+jsonData	components/AlbumSearch.js	/^            const jsonData = JSON.parse(event.data);$/;"	C
+newText	components/Text.js	/^                <span className={isLoading ? "font-blinker loading" : "font-blinker"}>{newText}</;"	M	variable:
+onmessage	components/AlbumSearch.js	/^        source.onmessage = (event) => {$/;"	f	constant:source
+primaryRGB	components/GeneratePlaylist.js	/^                primaryRGB: primaryColor,$/;"	p	variable:anonymousObject65206ee20305
+props	components/ColorPicker.js	/^            <h2>{props.text.text} Color<\/h2>$/;"	M	variable:
+pullData	components/GeneratePlaylist.js	/^    const pullData = (data, isPrimary) => {$/;"	f
+rec	components/AlbumSearch.js	/^                                <Album image={rec.image} name={rec.name} artist={rec.artists} co/;"	M	variable:
+root	index.js	/^const root = ReactDOM.createRoot(document.getElementById('root'));$/;"	C
+secondaryRGB	components/GeneratePlaylist.js	/^                secondaryRGB: secondaryColor,$/;"	p	variable:anonymousObject65206ee20305
+setAlbum	components/AlbumSearch.js	/^    const [album, setAlbum] = useState({})$/;"	C
+setAnimation	components/Text.js	/^    const [animation, setAnimation] = useState("text-box-slide-up")$/;"	C
+setBackgroundColor	App.js	/^  const [backgroundColor, setBackgroundColor] = useState("#00d3ff");$/;"	C
+setColor	components/ColorPicker.js	/^            <HexColorPicker color={color} onChange={setColor} \/>$/;"	M	variable:
+setColor	components/ColorPicker.js	/^    const [color, setColor] = useState("#165da3");$/;"	C
+setGoClicked	components/AlbumSearch.js	/^    const [goClicked, setGoClicked] = useState(false)$/;"	C
+setLoading	components/Text.js	/^    const [isLoading, setLoading] = useState(loading)$/;"	C
+setNewRender	components/AlbumSearch.js	/^    const [renderNewAlbums, setNewRender] = useState(false)$/;"	C
+setPrimaryColor	components/GeneratePlaylist.js	/^    const [primaryColor, setPrimaryColor] = useState({})$/;"	C
+setRecommendedAlbums	components/AlbumSearch.js	/^    const [recommendedAlbums, setRecommendedAlbums] = useState([])$/;"	C
+setSecondaryColor	components/GeneratePlaylist.js	/^    const [secondaryColor, setSecondaryColor] = useState({})$/;"	C
+setText	components/Text.js	/^    const [newText, setText] = useState(text)$/;"	C
+setUrl	components/AlbumSearch.js	/^    const [url, setUrl] = useState("");$/;"	C
+source	components/AlbumSearch.js	/^        const source = new EventSource(`\/api\/recommended\/${album.album_id}\/${album.artist_id/;"	C
+useEffect	components/AlbumSearch.js	/^    useEffect(() => {$/;"	f
