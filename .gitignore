@@ -18,3 +18,5 @@ node_modules
 backend/gin-bin
 backend/public/bundle.js
 npm-debug.log
+.idea
+

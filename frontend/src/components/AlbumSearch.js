@@ -69,29 +69,29 @@ const AlbumSearch = (props) => {
                 <></>
             }
             {Object.keys(album).length !== 0 &&
-            <>
-                <Album image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
-                <div class="mt-4 mb-4">
-                    <div class="relative rounded-xl">
-                        <div class="flex justify-center items-center">
-                            <button type="button" class="inline-flex items-center px-4 py-2 font-medium leading-tight text-xs shadow rounded text-white bg-indigo-500 hover:bg-indigo-400 transition ease-in-out duration-150 cursor-not-allowed" disabled>
-                              <svg class="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              PROCESSING...
-                            </button>
+                <>
+                    <Album uri={album.album_id} image={album.album_image} name={album.album_name} artist={album.artist} colors={album.image_colors} />
+                    <div class="mt-4 mb-4">
+                        <div class="relative rounded-xl">
+                            <div class="flex justify-center items-center">
+                                <span class="inline-flex items-center px-4 py-2 leading-tight text-xs rounded text-black font-semibold">
+                                    <svg class="animate-spin h-5 w-5 mr-3 text-black" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    PROCESSING...
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </>
+                </>
             }
             {renderNewAlbums &&
-                <div class="grid grid-flow-row gap-4 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-1">
+                <div class="grid grid-flow-row gap-4 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-1">
                     {
                         recommendedAlbums.map((rec) =>
                             <div>
-                                <Album image={rec.image} name={rec.name} artist={rec.artists} colors={rec.colors} />
+                                <Album uri={rec.id} image={rec.image} name={rec.name} artist={rec.artists} colors={rec.colors} />
                             </div>
                         )
                     }

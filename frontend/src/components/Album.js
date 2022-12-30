@@ -21,7 +21,7 @@ const Album = (props) => {
 
   return (
     <div className="flex flex-col items-center justify-center mt-6">
-      <div className="h-64 w-64 border-1.5 drop-shadow-lg border-gray-900">
+      <div className="w-64 border-1.5 drop-shadow-lg border-gray-900">
           { openPlayer ?
               <iframe
                   onMouseLeave={e => setOpenPlayer(false)}
