@@ -15,7 +15,6 @@ const AlbumSearch = (props) => {
 
     useEffect(() => {
         if (Object.keys(album).length !== 0){
-            console.log(album)
             getRecommendedAlbums()
         }
     }, [album])
@@ -27,7 +26,6 @@ const AlbumSearch = (props) => {
         axios.get(`/api/get-album/${url}`)
             .then((res) => {
                 setAlbum(res.data)
-                console.log(res.data.image_colors)
                 let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
                 props.func(promColor);
             })
@@ -47,7 +45,6 @@ const AlbumSearch = (props) => {
     }
 
     useEffect(() => {
-        console.log(recommendedAlbums)
         setNewRender(true);
     }, [recommendedAlbums]);
 
@@ -90,7 +87,7 @@ const AlbumSearch = (props) => {
             </>
             }
             {renderNewAlbums &&
-                <div class="grid grid-cols-4 grid-flow-row gap-4">
+                <div class="grid grid-flow-row gap-4 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-1">
                     {
                         recommendedAlbums.map((rec) =>
                             <div>
