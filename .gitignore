@@ -19,4 +19,4 @@ backend/gin-bin
 backend/public/bundle.js
 npm-debug.log
 .idea
-
+.idea/workspace.xml
