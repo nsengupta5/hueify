@@ -532,6 +532,15 @@ func searchAlbums(
 	return nil
 }
 
+// func sortBySaturation(colors []prominentcolor.ColorItem) []prominentcolor.ColorItem {
+// 	mappings := make(map[prominentcolor.ColorItem]float64)
+	
+// 	for i := 0; i < len(colors); i++ {
+// 		_,s,_ := RGBToHSL(colors[i])
+// 		mappings[colors[i]] = s
+// 	}
+// }
+
 func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
 	originalLen := len(original)
 	currLen := len(current)
@@ -541,7 +550,7 @@ func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentc
 		for j := 0; j < currLen/2; j++ {
 			if betterSimilarColor(original[i], current[j]) <= difference {
 				if i == 0 {
-					difference += 20
+					difference = 20
 				}
 				found = true
 				break
@@ -675,6 +684,52 @@ func RGBToLAB(color prominentcolor.ColorItem) (float64, float64, float64) {
 	x,y,z := RGBtoXYZ(color)
 	l,a,b := XYZToLAB(x,y,z)
 	return l,a,b
+}
+
+func RGBToHSL(color prominentcolor.ColorItem) (float64, float64, float64) {
+	var_R := float64(color.Color.R) / 255
+	var_G := float64(color.Color.G) / 255
+	var_B := float64(color.Color.B) / 255
+
+	var_Min := math.Min(var_R, var_G)
+	var_Min = math.Min(var_Min, var_B)
+	var_Max := math.Max(var_R, var_G)
+	var_Max = math.Max(var_Max, var_B)
+	del_Max := var_Max - var_Min
+
+	l := float64((var_Max + var_Min)) / 2
+	h := float64(0)
+	s := float64(0)
+
+	if (del_Max != 0) {
+		if (l < 0.5) {
+			s = del_Max / (var_Max + var_Min)
+		} else {
+			s = del_Max / (2 - var_Max - var_Min)
+		}
+
+		del_R := (((float64(var_Max - var_R)) / 6) + (float64(del_Max) / 2)) / del_Max
+		del_G := (((float64(var_Max - var_G)) / 6) + (float64(del_Max) / 2)) / del_Max
+		del_B := ((float64((var_Max - var_B) / 6)) + (float64(del_Max) / 2)) / del_Max
+
+		if (var_R == var_Max) {
+			h = del_B - del_G
+		} else if (var_G == var_Max) {
+			h = (float64(1) / 3) + del_R - del_B
+		} else {
+			h = (float64(2) / 3) + del_G - del_R
+		}
+	
+		if (h < 0) {
+			h += 1
+		}
+
+		if (h > 1) {
+			h -= 1
+		}
+	}
+
+	return h,s,l
 }
 
 func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.ColorItem) float64 {

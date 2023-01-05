@@ -6,6 +6,40 @@ import (
 	"github.com/EdlinOrg/prominentcolor"
 )
 
+func TestRGBToS(t *testing.T) {
+	var color1 prominentcolor.ColorItem
+
+	color1.Color.R = 30
+	color1.Color.G = 60
+	color1.Color.B = 90
+
+	_,s,_ := RGBToHSL(color1)
+
+	actual := math.Floor((s * 100) * 100)/100
+	expected := float64(50)
+
+	if actual != expected {
+		t.Errorf("got %f, wanted %f", actual, expected)
+	}
+}
+
+func TestRGBToL(t *testing.T) {
+	var color1 prominentcolor.ColorItem
+
+	color1.Color.R = 30
+	color1.Color.G = 60
+	color1.Color.B = 90
+
+	_,_,l := RGBToHSL(color1)
+
+	actual := math.Floor((l * 100) * 100)/100
+	expected := 23.52
+
+	if actual != expected {
+		t.Errorf("got %f, wanted %f", actual, expected)
+	}
+}
+
 func TestRGBToX(t *testing.T) {
 	var color1 prominentcolor.ColorItem
 
