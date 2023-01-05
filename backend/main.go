@@ -23,7 +23,6 @@ import (
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/hisamafahri/coco"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
@@ -534,17 +533,24 @@ func searchAlbums(
 }
 
 func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
-	paletteLen := len(original)
-	difference := float64(25)
-	for i := 0; i < paletteLen/2; i++ {
-		if betterSimilarColor(original[i], current[i]) <= difference {
-			if i > 1 {
-				difference += 10
+	originalLen := len(original)
+	currLen := len(current)
+	difference := float64(10)
+	for i := 0; i < originalLen/2; i++ {
+		found := false
+		for j := 0; j < currLen/2; j++ {
+			if betterSimilarColor(original[i], current[j]) <= difference {
+				if i == 0 {
+					difference += 20
+				}
+				found = true
+				break
 			}
-		} else {
+		}
+		if !found {
 			return false
 		}
-	}
+	} 
 	return true
 }
 
@@ -597,16 +603,83 @@ func removeSimilarColor(
 	return newColorScheme
 }
 
-func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.ColorItem) float64 {
-	color1_lab := coco.Rgb2Lab(float64(color1.Color.R), float64(color1.Color.G), float64(color1.Color.B))
-	color2_lab := coco.Rgb2Lab(float64(color2.Color.R), float64(color2.Color.G), float64(color2.Color.B))
+func RGBtoXYZ(color prominentcolor.ColorItem) (float64, float64, float64) {
+	var_R := float64(color.Color.R) / 255
+	var_G := float64(color.Color.G) / 255
+	var_B := float64(color.Color.B) / 255
 
-	color1_L := color1_lab[0]
-	color2_L := color2_lab[0]
-	color1_a := color1_lab[1]
-	color2_a := color2_lab[1]
-	color1_b := color1_lab[2]
-	color2_b := color2_lab[2]
+	if (var_R > 0.04045) {
+		var_R = math.Pow((var_R + 0.055) / 1.055, 2.4)
+	} else {
+		var_R /= 12.92
+	}
+
+	if (var_G > 0.04045) {
+		var_G = math.Pow((var_G + 0.055) / 1.055, 2.4)
+	} else {
+		var_G /= 12.92
+	}
+
+	if (var_B > 0.04045) {
+		var_B = math.Pow((var_B + 0.055) / 1.055, 2.4)
+	} else {
+		var_B /= 12.92
+	}
+
+	var_R *= 100
+	var_G *= 100
+	var_B *= 100
+
+	x := var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805
+	y := var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
+	z := var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505
+
+	return x,y,z
+} 
+
+func XYZToLAB(x float64, y float64, z float64) (float64, float64, float64) {
+	reference_x := 95.047
+	reference_y := 100.0
+	reference_z := 108.883
+
+	var_X := x / reference_x
+	var_Y := y / reference_y
+	var_Z := z / reference_z
+
+	if (var_X > 0.008856) {
+		var_X = math.Pow(var_X, float64(1)/3)
+	} else {
+		var_X = (7.787 * var_X) + (float64(16) / 116)
+	}
+	
+	if (var_Y > 0.008856) {
+		var_Y = math.Pow(var_Y, float64(1)/3)
+	} else {
+		var_Y = (7.787 * var_Y) + (float64(16) / 116)
+	}
+
+	if (var_Z > 0.008856) {
+		var_Z = math.Pow(var_Z, float64(1)/3)
+	} else {
+		var_Z = (7.787 * var_Z) + (float64(16) / 116)
+	}
+
+	l := (116 * var_Y) - 16
+	a := 500 * (var_X - var_Y)
+	b := 200 * (var_Y - var_Z)
+
+	return l,a,b
+}
+
+func RGBToLAB(color prominentcolor.ColorItem) (float64, float64, float64) {
+	x,y,z := RGBtoXYZ(color)
+	l,a,b := XYZToLAB(x,y,z)
+	return l,a,b
+}
+
+func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.ColorItem) float64 {
+	color1_L, color1_a, color1_b := RGBToLAB(color1)
+	color2_L, color2_a, color2_b := RGBToLAB(color2)
 
 	// For graphic arts
 	kl := 1
@@ -622,11 +695,17 @@ func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.C
 	delta_a := color1_a - color2_a
 	delta_b := color1_b - color2_b
 	delta_h := math.Sqrt(math.Pow(delta_a, 2) + math.Pow(delta_b, 2) - math.Pow(delta_c, 2))
-	sl := 1
-	sc := 1 + k1*c1
-	sh := 1 + k2*c1
 
-	delta_e := math.Sqrt(math.Pow((delta_L/float64(kl*sl)), 2) + math.Pow((delta_c/float64(kc*sc)), 2) + math.Pow((delta_h/kh*sh), 2))
+	// NEED TO CHECK
+	if math.IsNaN(delta_h) {
+		delta_h = 0
+	}
+
+	sl := 1
+	sc := 1 + (k1 * c1)
+	sh := 1 + (k2 * c1)
+
+	delta_e := math.Sqrt(math.Pow((delta_L/float64(kl*sl)), 2) + math.Pow((delta_c/float64(kc*sc)), 2) + math.Pow((delta_h/(kh*sh)), 2))
 
 	/* Delta E Values:
 	<= 1 --> not perceptible
