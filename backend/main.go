@@ -133,8 +133,18 @@ func loadImage(fileInput string) (image.Image, error) {
 	return img, err
 }
 
+func convertURLToURI(url string) string {
+	return ""
+}
+
 func getAlbumReq(c *gin.Context) {
 	uri := c.Param("uri")
+
+	fmt.Println(uri)
+
+	if strings.Contains(uri, "http") {
+		uri = convertURLToURI(uri)
+	}
 
 	album, err := getAlbum(uri, true)
 
@@ -568,7 +578,7 @@ func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentc
 		found := false
 		for j := 0; j < currLen/2; j++ {
 			if betterSimilarColor(mostImportant[i], current[j]) <= difference {
-				difference = 20
+				difference = 16
 				found = true
 				break
 			}
