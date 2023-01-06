@@ -23,12 +23,30 @@ const AlbumSearch = (props) => {
         event.preventDefault();
 
         setGoClicked(true)
-        axios.get(`/api/get-album/${url}`)
-            .then((res) => {
-                setAlbum(res.data)
-                let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
-                props.func(promColor);
-            })
+
+        if (url.includes("http")) {
+            let albumSub = "album/"
+            let startIdx = url.indexOf(albumSub) + albumSub.length
+            let endIdx = url.indexOf("?")
+            let transformedURL = "spotify:album:" + url.substring(startIdx, endIdx)
+
+            axios.get(`/api/get-album/${transformedURL}`)
+                .then((res) => {
+                    setAlbum(res.data)
+                    let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
+                    props.func(promColor);
+                })
+        }
+
+        else {
+            axios.get(`/api/get-album/${url}`)
+                .then((res) => {
+                    setAlbum(res.data)
+                    let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
+                    props.func(promColor);
+                })
+        }
+
     }
 
     const getRecommendedAlbums = () => {

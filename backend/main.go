@@ -133,18 +133,8 @@ func loadImage(fileInput string) (image.Image, error) {
 	return img, err
 }
 
-func convertURLToURI(url string) string {
-	return ""
-}
-
 func getAlbumReq(c *gin.Context) {
 	uri := c.Param("uri")
-
-	fmt.Println(uri)
-
-	if strings.Contains(uri, "http") {
-		uri = convertURLToURI(uri)
-	}
 
 	album, err := getAlbum(uri, true)
 
