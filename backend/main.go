@@ -541,7 +541,7 @@ func searchAlbums(
 	return nil
 }
 
-func getMostSaturatedColor(colors []prominentcolor.ColorItem) prominentcolor.ColorItem {
+func getMostSaturatedColor(colors []prominentcolor.ColorItem) []prominentcolor.ColorItem {
 	mappings := make(map[prominentcolor.ColorItem]float64)
 	
 	for i := 0; i < len(colors); i++ {
@@ -558,27 +558,43 @@ func getMostSaturatedColor(colors []prominentcolor.ColorItem) prominentcolor.Col
 
 	sort.Sort(sort.Reverse(p))
 
+	result := make([]prominentcolor.ColorItem, 0)
 	for _, k := range p {
-		return k.Key
+		result = append(result, k.Key)
 	}
 
-	return colors[0]
+	return result
 }
 
 func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentcolor.ColorItem) bool {
 	originalLen := len(original)
 	currLen := len(current)
 	mostImportant := make([]prominentcolor.ColorItem, 0)
+	mostSaturatedArr := getMostSaturatedColor(original)
+	mostSaturated := mostSaturatedArr[0]
+
+	if (mostSaturated == original[0]) {
+		if (mostSaturatedArr[1] == original[1]) {
+			mostSaturated = mostSaturatedArr[2]
+		} else {
+			mostSaturated = mostSaturatedArr[1]
+		}
+	}
+
+	if (mostSaturated == original[1]) {
+		mostSaturated = mostSaturatedArr[1]
+	}
+
 	mostImportant = append(mostImportant, original[0])
 	mostImportant = append(mostImportant, original[1])
-	mostImportant = append(mostImportant, getMostSaturatedColor(original))
+	mostImportant = append(mostImportant, mostSaturated)
 
 	difference := float64(10)
 	for i := 0; i < originalLen/2; i++ {
 		found := false
 		for j := 0; j < currLen/2; j++ {
 			if betterSimilarColor(mostImportant[i], current[j]) <= difference {
-				difference = 18
+				difference = 16
 				found = true
 				break
 			}
