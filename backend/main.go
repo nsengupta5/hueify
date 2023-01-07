@@ -136,6 +136,16 @@ func loadImage(fileInput string) (image.Image, error) {
 func getAlbumReq(c *gin.Context) {
 	uri := c.Param("uri")
 
+	if strings.Contains(uri, "track") {
+		id := strings.Split(uri, ":")[2]
+		track, err := client.GetTrack(spotify.ID(id))
+		if err != nil {
+			return
+		}
+		uri = string(track.Album.URI)
+	}
+
+
 	album, err := getAlbum(uri, true)
 
 	if err != nil {
@@ -568,7 +578,7 @@ func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentc
 		found := false
 		for j := 0; j < currLen/2; j++ {
 			if betterSimilarColor(mostImportant[i], current[j]) <= difference {
-				difference = 16
+				difference = 18
 				found = true
 				break
 			}

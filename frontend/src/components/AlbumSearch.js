@@ -25,10 +25,20 @@ const AlbumSearch = (props) => {
         setGoClicked(true)
 
         if (url.includes("http")) {
-            let albumSub = "album/"
-            let startIdx = url.indexOf(albumSub) + albumSub.length
-            let endIdx = url.indexOf("?")
-            let transformedURL = "spotify:album:" + url.substring(startIdx, endIdx)
+            let transformedURL = ""
+
+            if (url.includes("album")) {
+                let albumSub = "album/"
+                let startIdx = url.indexOf(albumSub) + albumSub.length
+                let endIdx = url.indexOf("?")
+                transformedURL = "spotify:album:" + url.substring(startIdx, endIdx)
+            }
+            else {
+                let trackSub = "track/"
+                let startIdx = url.indexOf(trackSub) + trackSub.length
+                let endIdx = url.indexOf("?")
+                transformedURL = "spotify:track:" + url.substring(startIdx, endIdx)
+            }
 
             axios.get(`/api/get-album/${transformedURL}`)
                 .then((res) => {
