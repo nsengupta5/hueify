@@ -1,12 +1,9 @@
 package main
 
 import (
-	"cloud.google.com/go/firestore"
 	"context"
 	"encoding/json"
-	firebase "firebase.google.com/go"
 	"fmt"
-	"google.golang.org/api/option"
 	Generator "hueify/generator"
 	HttpError "hueify/http-errors"
 	Queue "hueify/queue"
@@ -16,9 +13,14 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
+
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/gin-gonic/contrib/static"
@@ -42,6 +44,10 @@ var clientErr error
 
 func main() {
 	var err error
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = string(8080)
+	}
 
 	//set up Firestore for artist metadata (related artists)
 	ctx = context.Background()
@@ -92,7 +98,7 @@ func main() {
 
 	}
 
-	err = router.Run("localhost:8080")
+	err = router.Run(":" + port)
 	if err != nil {
 		return
 	}
