@@ -40,7 +40,7 @@ const AlbumSearch = (props) => {
                 transformedURL = "spotify:track:" + url.substring(startIdx, endIdx)
             }
 
-            axios.get(`/api/get-album/${transformedURL}`)
+            axios.get(`https://hueify.netlify.app/api/get-album/${transformedURL}`)
                 .then((res) => {
                     setAlbum(res.data)
                     let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
@@ -49,7 +49,7 @@ const AlbumSearch = (props) => {
         }
 
         else {
-            axios.get(`/api/get-album/${url}`)
+            axios.get(`https://hueify.netlify.app/api/get-album/${url}`)
                 .then((res) => {
                     setAlbum(res.data)
                     let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
