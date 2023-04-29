@@ -65,6 +65,7 @@ const AlbumSearch = (props) => {
 
         source.onmessage = (event) => {
             const jsonData = JSON.parse(event.data);
+            console.log(jsonData)
             setRecommendedAlbums(prevArray => [...prevArray, jsonData]);
             if (jsonData.endStream === true){
                 source.close()
