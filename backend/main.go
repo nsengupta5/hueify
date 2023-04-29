@@ -145,9 +145,7 @@ func getAlbumReq(c *gin.Context) {
 		uri = string(track.Album.URI)
 	}
 
-
 	album, err := getAlbum(uri, true)
-
 	if err != nil {
 		HttpError.AlbumInfoFailure(c, err)
 	}
@@ -162,6 +160,8 @@ func getAlbumReq(c *gin.Context) {
 	if err != nil {
 		HttpError.JSONDeserializeFailure(c, err)
 	}
+
+	println("no errors so far")
 	//Use c.JSON() instead in production
 	//as indentedJson is CPU intensive
 	c.IndentedJSON(http.StatusOK, res)
@@ -543,15 +543,15 @@ func searchAlbums(
 
 func getMostSaturatedColor(colors []prominentcolor.ColorItem) []prominentcolor.ColorItem {
 	mappings := make(map[prominentcolor.ColorItem]float64)
-	
+
 	for i := 0; i < len(colors); i++ {
-		_,s,_ := RGBToHSL(colors[i])
+		_, s, _ := RGBToHSL(colors[i])
 		mappings[colors[i]] = s
 	}
 
 	p := make(Structs.PairList, len(mappings))
 	i := 0
-	for k,v := range mappings {
+	for k, v := range mappings {
 		p[i] = Structs.Pair{k, v}
 		i++
 	}
@@ -573,15 +573,15 @@ func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentc
 	mostSaturatedArr := getMostSaturatedColor(original)
 	mostSaturated := mostSaturatedArr[0]
 
-	if (mostSaturated == original[0]) {
-		if (mostSaturatedArr[1] == original[1]) {
+	if mostSaturated == original[0] {
+		if mostSaturatedArr[1] == original[1] {
 			mostSaturated = mostSaturatedArr[2]
 		} else {
 			mostSaturated = mostSaturatedArr[1]
 		}
 	}
 
-	if (mostSaturated == original[1]) {
+	if mostSaturated == original[1] {
 		mostSaturated = mostSaturatedArr[1]
 	}
 
@@ -602,7 +602,7 @@ func compareArtworkNew(original []prominentcolor.ColorItem, current []prominentc
 		if !found {
 			return false
 		}
-	} 
+	}
 	return true
 }
 
@@ -660,20 +660,20 @@ func RGBtoXYZ(color prominentcolor.ColorItem) (float64, float64, float64) {
 	var_G := float64(color.Color.G) / 255
 	var_B := float64(color.Color.B) / 255
 
-	if (var_R > 0.04045) {
-		var_R = math.Pow((var_R + 0.055) / 1.055, 2.4)
+	if var_R > 0.04045 {
+		var_R = math.Pow((var_R+0.055)/1.055, 2.4)
 	} else {
 		var_R /= 12.92
 	}
 
-	if (var_G > 0.04045) {
-		var_G = math.Pow((var_G + 0.055) / 1.055, 2.4)
+	if var_G > 0.04045 {
+		var_G = math.Pow((var_G+0.055)/1.055, 2.4)
 	} else {
 		var_G /= 12.92
 	}
 
-	if (var_B > 0.04045) {
-		var_B = math.Pow((var_B + 0.055) / 1.055, 2.4)
+	if var_B > 0.04045 {
+		var_B = math.Pow((var_B+0.055)/1.055, 2.4)
 	} else {
 		var_B /= 12.92
 	}
@@ -682,12 +682,12 @@ func RGBtoXYZ(color prominentcolor.ColorItem) (float64, float64, float64) {
 	var_G *= 100
 	var_B *= 100
 
-	x := var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805
-	y := var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
-	z := var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505
+	x := var_R*0.4124 + var_G*0.3576 + var_B*0.1805
+	y := var_R*0.2126 + var_G*0.7152 + var_B*0.0722
+	z := var_R*0.0193 + var_G*0.1192 + var_B*0.9505
 
-	return x,y,z
-} 
+	return x, y, z
+}
 
 func XYZToLAB(x float64, y float64, z float64) (float64, float64, float64) {
 	reference_x := 95.047
@@ -698,19 +698,19 @@ func XYZToLAB(x float64, y float64, z float64) (float64, float64, float64) {
 	var_Y := y / reference_y
 	var_Z := z / reference_z
 
-	if (var_X > 0.008856) {
+	if var_X > 0.008856 {
 		var_X = math.Pow(var_X, float64(1)/3)
 	} else {
 		var_X = (7.787 * var_X) + (float64(16) / 116)
 	}
-	
-	if (var_Y > 0.008856) {
+
+	if var_Y > 0.008856 {
 		var_Y = math.Pow(var_Y, float64(1)/3)
 	} else {
 		var_Y = (7.787 * var_Y) + (float64(16) / 116)
 	}
 
-	if (var_Z > 0.008856) {
+	if var_Z > 0.008856 {
 		var_Z = math.Pow(var_Z, float64(1)/3)
 	} else {
 		var_Z = (7.787 * var_Z) + (float64(16) / 116)
@@ -720,13 +720,13 @@ func XYZToLAB(x float64, y float64, z float64) (float64, float64, float64) {
 	a := 500 * (var_X - var_Y)
 	b := 200 * (var_Y - var_Z)
 
-	return l,a,b
+	return l, a, b
 }
 
 func RGBToLAB(color prominentcolor.ColorItem) (float64, float64, float64) {
-	x,y,z := RGBtoXYZ(color)
-	l,a,b := XYZToLAB(x,y,z)
-	return l,a,b
+	x, y, z := RGBtoXYZ(color)
+	l, a, b := XYZToLAB(x, y, z)
+	return l, a, b
 }
 
 func RGBToHSL(color prominentcolor.ColorItem) (float64, float64, float64) {
@@ -744,8 +744,8 @@ func RGBToHSL(color prominentcolor.ColorItem) (float64, float64, float64) {
 	h := float64(0)
 	s := float64(0)
 
-	if (del_Max != 0) {
-		if (l < 0.5) {
+	if del_Max != 0 {
+		if l < 0.5 {
 			s = del_Max / (var_Max + var_Min)
 		} else {
 			s = del_Max / (2 - var_Max - var_Min)
@@ -755,24 +755,24 @@ func RGBToHSL(color prominentcolor.ColorItem) (float64, float64, float64) {
 		del_G := (((float64(var_Max - var_G)) / 6) + (float64(del_Max) / 2)) / del_Max
 		del_B := ((float64((var_Max - var_B) / 6)) + (float64(del_Max) / 2)) / del_Max
 
-		if (var_R == var_Max) {
+		if var_R == var_Max {
 			h = del_B - del_G
-		} else if (var_G == var_Max) {
+		} else if var_G == var_Max {
 			h = (float64(1) / 3) + del_R - del_B
 		} else {
 			h = (float64(2) / 3) + del_G - del_R
 		}
-	
-		if (h < 0) {
+
+		if h < 0 {
 			h += 1
 		}
 
-		if (h > 1) {
+		if h > 1 {
 			h -= 1
 		}
 	}
 
-	return h,s,l
+	return h, s, l
 }
 
 func betterSimilarColor(color1 prominentcolor.ColorItem, color2 prominentcolor.ColorItem) float64 {
