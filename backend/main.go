@@ -1,12 +1,8 @@
 package main
 
 import (
-	"cloud.google.com/go/firestore"
 	"context"
 	"encoding/json"
-	firebase "firebase.google.com/go"
-	"fmt"
-	"google.golang.org/api/option"
 	Generator "hueify/generator"
 	HttpError "hueify/http-errors"
 	Queue "hueify/queue"
@@ -19,6 +15,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
+
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/gin-gonic/contrib/static"
@@ -384,7 +386,7 @@ func getNewAlbums(c *gin.Context) {
 	//}
 
 	//create channel which stores the recommended albums
-	recommended := make(chan Structs.RecommendedAlbum, 6)
+	recommended := make(chan Structs.RecommendedAlbum, 5)
 
 	bound1 := float64(len(relatedArtists)) * 0.1
 	bound2 := float64(len(relatedArtists)) * 0.2
@@ -398,24 +400,34 @@ func getNewAlbums(c *gin.Context) {
 	bounds := [10]int{0, int(bound1), int(bound2), int(bound3), int(bound4), int(bound5), int(bound6), int(bound7),
 		int(bound8), int(bound9)}
 
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	var size uint32
+
+	wg.Add(1)
 	go func() {
-		err = searchAlbums(relatedArtists[:bounds[0]], album, recommended)
+		defer wg.Done()
+		err = searchAlbums(relatedArtists[:bounds[0]], album, recommended, stop, &size)
 		if err != nil {
 			HttpError.GetRecommendedAlbumsFailure(c, err)
 		}
 	}()
 
 	for i := 1; i < len(bounds)-1; i++ {
+		wg.Add(1)
 		go func(_i int) {
-			err = searchAlbums(relatedArtists[bounds[_i]:bounds[_i+1]], album, recommended)
+			defer wg.Done()
+			err = searchAlbums(relatedArtists[bounds[_i]:bounds[_i+1]], album, recommended, stop, &size)
 			if err != nil {
 				HttpError.GetRecommendedAlbumsFailure(c, err)
 			}
 		}(i)
 	}
 
+	wg.Add(1)
 	go func() {
-		err = searchAlbums(relatedArtists[bounds[9]:], album, recommended)
+		defer wg.Done()
+		err = searchAlbums(relatedArtists[bounds[9]:], album, recommended, stop, &size)
 		if err != nil {
 			HttpError.GetRecommendedAlbumsFailure(c, err)
 		}
@@ -426,8 +438,10 @@ func getNewAlbums(c *gin.Context) {
 	var latestAlbumReturned Structs.RecommendedAlbum
 	latestAlbumReturned = Structs.RecommendedAlbum{}
 	for !done {
-		if len(recommended) == cap(recommended) {
+		if atomic.LoadUint32(&size) == uint32(cap(recommended)) {
+			println("channel filled up")
 			done = true
+			close(stop)
 		} else {
 			//if new album added to channel then stream response
 			c.Stream(func(w io.Writer) bool {
@@ -443,8 +457,16 @@ func getNewAlbums(c *gin.Context) {
 		}
 	}
 
-	c.AbortWithStatus(http.StatusOK)
-	return
+	wg.Wait()
+	close(recommended)
+
+	type Res struct {
+		message bool
+	}
+
+	c.IndentedJSON(http.StatusOK, Res{
+		message: true,
+	})
 }
 
 func exactAlbum(album spotify.SimpleAlbum, albumToCompareTo Structs.AlbumRes) bool {
@@ -457,7 +479,9 @@ func exactAlbum(album spotify.SimpleAlbum, albumToCompareTo Structs.AlbumRes) bo
 func searchAlbums(
 	relatedArtistsSlice []Structs.RelatedArtistInfo,
 	originalAlbum Structs.AlbumRes,
-	ch chan Structs.RecommendedAlbum) error {
+	ch chan Structs.RecommendedAlbum,
+	stop <-chan struct{},
+	size *uint32) error {
 
 	var routineClient spotify.Client
 	routineClient = spotify.Authenticator{}.NewClient(accessToken)
@@ -477,63 +501,69 @@ func searchAlbums(
 
 		for j, album := range albums.Albums {
 
-			println("looking at album:" + strconv.Itoa(j))
-
-			if exactAlbum(album, originalAlbum) {
-				continue
-			}
-
-			if visitedAlbums[album.ID.String()] {
-				continue
-			}
-
-			//get color scheme of album
-
-			//debug index out of range error for album.Images[0]
-			if len(album.Images) == 0 {
+			select {
+			case <-stop:
+				println("goroutine stopped")
 				return nil
-			}
+			default:
 
-			img, err := loadImage(album.Images[0].URL)
-			if err != nil {
-				return err
-			}
+				println("looking at album:" + strconv.Itoa(j))
 
-			colors, err := getColors(img)
-			if err != nil {
-				return err
-			}
-
-			//compare colors to original color scheme
-			artworkIsSimilar := compareArtworkNew(originalColorScheme, colors)
-
-			//if 50% match then write to channel
-			if visited := visitedAlbums[album.ID.String()]; artworkIsSimilar && !visited {
-				fmt.Println("color match:")
-
-				endStream := len(ch) == cap(ch)
-
-				albumToReturn := Structs.RecommendedAlbum{
-					Type:      album.AlbumType,
-					Id:        album.ID.String(),
-					Name:      album.Name,
-					Artists:   album.Artists[0].Name,
-					Image:     album.Images[0].URL,
-					Colors:    colors,
-					EndStream: endStream,
+				if exactAlbum(album, originalAlbum) {
+					continue
 				}
 
-				visitedAlbums[album.ID.String()] = true
-
-				print(albumToReturn.Name)
-
-				if album.AlbumType != "single" {
-					ch <- albumToReturn
+				if visitedAlbums[album.ID.String()] {
+					continue
 				}
 
-				println("got an album")
-			} else {
-				visitedAlbums[album.ID.String()] = true
+				//get color scheme of album
+
+				//debug index out of range error for album.Images[0]
+				if len(album.Images) == 0 {
+					return nil
+				}
+
+				img, err := loadImage(album.Images[0].URL)
+				if err != nil {
+					return err
+				}
+
+				colors, err := getColors(img)
+				if err != nil {
+					return err
+				}
+
+				//compare colors to original color scheme
+				artworkIsSimilar := compareArtworkNew(originalColorScheme, colors)
+
+				//if 50% match then write to channel
+				if visited := visitedAlbums[album.ID.String()]; artworkIsSimilar && !visited {
+					if album.AlbumType != "single" {
+						atomic.AddUint32(size, 1)
+						endStream := atomic.LoadUint32(size) == uint32(cap(ch))
+						println(endStream)
+
+						albumToReturn := Structs.RecommendedAlbum{
+							Type:      album.AlbumType,
+							Id:        album.ID.String(),
+							Name:      album.Name,
+							Artists:   album.Artists[0].Name,
+							Image:     album.Images[0].URL,
+							Colors:    colors,
+							EndStream: endStream,
+						}
+
+						visitedAlbums[album.ID.String()] = true
+						print(albumToReturn.Name)
+						println("got an album")
+						ch <- albumToReturn
+						println(atomic.LoadUint32(size))
+					}
+
+				} else {
+					visitedAlbums[album.ID.String()] = true
+				}
 			}
 		}
 	}
