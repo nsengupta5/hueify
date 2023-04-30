@@ -513,10 +513,13 @@ func searchAlbums(
 					continue
 				}
 
-				if visitedAlbums[album.ID.String()] {
+				albumIdentifier := album.Name + " " + album.Artists[0].Name
+
+				if visitedAlbums[albumIdentifier] {
 					continue
 				}
 
+				visitedAlbums[albumIdentifier] = true
 				//get color scheme of album
 
 				//debug index out of range error for album.Images[0]
@@ -538,7 +541,7 @@ func searchAlbums(
 				artworkIsSimilar := compareArtworkNew(originalColorScheme, colors)
 
 				//if 50% match then write to channel
-				if visited := visitedAlbums[album.ID.String()]; artworkIsSimilar && !visited {
+				if artworkIsSimilar {
 					if album.AlbumType != "single" {
 						atomic.AddUint32(size, 1)
 						endStream := atomic.LoadUint32(size) == uint32(cap(ch))
@@ -560,9 +563,6 @@ func searchAlbums(
 						ch <- albumToReturn
 						println(atomic.LoadUint32(size))
 					}
-
-				} else {
-					visitedAlbums[album.ID.String()] = true
 				}
 			}
 		}
