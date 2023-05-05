@@ -1,6 +1,6 @@
 module hueify
 
-go 1.18
+go 1.20
 
 require (
 	cloud.google.com/go/firestore v1.6.1
@@ -9,7 +9,6 @@ require (
 	github.com/fogleman/gg v1.3.0
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.8.1
-	github.com/hisamafahri/coco v1.0.0
 	github.com/zmb3/spotify v1.3.0
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
 	google.golang.org/api v0.97.0

@@ -5,8 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="df4d2d74-e1c6-4246-9875-ff20f78a9665" name="Changes" comment="failed merge">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/structs/structs.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/structs/structs.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,9 +34,12 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/.gitignore" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/backend/go.mod" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/backend/main.go" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/backend/structs/structs.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/frontend/src/App.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/frontend/src/components/Album.js" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/frontend/src/components/AlbumSearch.js" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/context.go" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/go/pkg/mod/github.com/gin-gonic/gin@v1.8.1/response_writer.go" root0="FORCE_HIGHLIGHTING" />
@@ -117,7 +123,7 @@
       <breakpoints>
         <line-breakpoint type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/backend/main.go</url>
-          <line>488</line>
+          <line>490</line>
           <option name="timeStamp" value="16" />
         </line-breakpoint>
       </breakpoints>

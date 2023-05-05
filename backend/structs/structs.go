@@ -1,6 +1,8 @@
 package structs
 
 import (
+	"image"
+
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/zmb3/spotify"
 )
@@ -54,14 +56,24 @@ type RecommendedAlbum struct {
 	EndStream bool                       `json:"endStream"`
 }
 
+type PotentialAlbum struct {
+	Similar             bool
+	Image               image.Image
+	Colors              []prominentcolor.ColorItem
+	OriginalColors      []prominentcolor.ColorItem
+	Album               spotify.SimpleAlbum
+	RecommendedChan     chan RecommendedAlbum
+	RecommendedChanSize *uint32
+	VisitedAlbums       map[string]bool
+}
+
 type Pair struct {
-	Key prominentcolor.ColorItem
+	Key   prominentcolor.ColorItem
 	Value float64
 }
 
 type PairList []Pair
 
-func (p PairList) Len() int { return len(p) }
+func (p PairList) Len() int           { return len(p) }
 func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
-

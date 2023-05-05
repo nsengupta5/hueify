@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	Generator "hueify/generator"
 	HttpError "hueify/http-errors"
 	Queue "hueify/queue"
 	Structs "hueify/structs"
+	WorkerPool "hueify/worker"
 	"image"
 	"io"
 	"log"
@@ -489,6 +491,10 @@ func searchAlbums(
 	visitedAlbums := map[string]bool{}
 	originalColorScheme := originalAlbum.ImageColors
 
+	//create workers
+	numWorkers := 10
+	workers := *WorkerPool.CreateWorkerPool(numWorkers)
+
 	//for each artist
 	for i, artist := range relatedArtistsSlice {
 		println("looking at artist:" + strconv.Itoa(i))
@@ -501,27 +507,48 @@ func searchAlbums(
 
 		for j, album := range albums.Albums {
 
+			println("looking at album:" + strconv.Itoa(j))
+
+			if exactAlbum(album, originalAlbum) {
+				continue
+			}
+
+			albumIdentifier := album.Name + " " + album.Artists[0].Name
+
+			if visitedAlbums[albumIdentifier] {
+				continue
+			}
+
+			//debug index out of range error for album.Images[0]
+			if len(album.Images) == 0 {
+				return nil
+			}
+
+			visitedAlbums[albumIdentifier] = true
+
 			select {
 			case <-stop:
 				println("goroutine stopped")
+				workers.Close()
 				return nil
 			default:
+				//make a worker with its own channel
+				// *workers.Jobs <- Structs.PotentialAlbum{
+				// 	Album:               album,
+				// 	OriginalColors:      originalColorScheme,
+				// 	VisitedAlbums:       visitedAlbums,
+				// 	RecommendedChan:     ch,
+				// 	RecommendedChanSize: size,
+				// }
 
-				println("looking at album:" + strconv.Itoa(j))
+				// var work func() = func() {
+				// 	assignRecommendationStg(
+				// 		compareArtworkNewStg(
+				// 			getColorsStg(
+				// 				loadImageStg(*workers.Jobs))))
+				// }
 
-				if exactAlbum(album, originalAlbum) {
-					continue
-				}
-
-				albumIdentifier := album.Name + " " + album.Artists[0].Name
-
-				if visitedAlbums[albumIdentifier] {
-					continue
-				}
-
-				visitedAlbums[albumIdentifier] = true
-				//get color scheme of album
-
+				// workers.Worker(work)
 				//debug index out of range error for album.Images[0]
 				if len(album.Images) == 0 {
 					return nil
@@ -564,11 +591,129 @@ func searchAlbums(
 						println(atomic.LoadUint32(size))
 					}
 				}
+
 			}
 		}
 	}
 
 	return nil
+}
+
+func loadImageStg(in <-chan Structs.PotentialAlbum) <-chan Structs.PotentialAlbum {
+	out := make(chan Structs.PotentialAlbum)
+	go func() {
+		for n := range in {
+			img, err := loadImage(n.Album.Images[0].URL)
+			if err != nil {
+				fmt.Errorf("Cannot get cover art image for this album: ", n.Album)
+				continue
+			}
+			out <- Structs.PotentialAlbum{
+				Image:               img,
+				OriginalColors:      n.OriginalColors,
+				Album:               n.Album,
+				RecommendedChan:     n.RecommendedChan,
+				RecommendedChanSize: n.RecommendedChanSize,
+				VisitedAlbums:       n.VisitedAlbums,
+			}
+		}
+	}()
+	return out
+}
+
+func getColorsStg(in <-chan Structs.PotentialAlbum) <-chan Structs.PotentialAlbum {
+	out := make(chan Structs.PotentialAlbum)
+	go func() {
+		for n := range in {
+			colors, err := getColors(n.Image)
+			if err != nil {
+				fmt.Errorf("Cannot get colours for this album: ", n.Album)
+				continue
+			}
+			out <- Structs.PotentialAlbum{
+				Image:               n.Image,
+				Colors:              colors,
+				OriginalColors:      n.OriginalColors,
+				Album:               n.Album,
+				RecommendedChan:     n.RecommendedChan,
+				RecommendedChanSize: n.RecommendedChanSize,
+				VisitedAlbums:       n.VisitedAlbums,
+			}
+		}
+	}()
+	return out
+}
+
+func compareArtworkNewStg(in <-chan Structs.PotentialAlbum) <-chan Structs.PotentialAlbum {
+	out := make(chan Structs.PotentialAlbum)
+	go func() {
+		for n := range in {
+			similar := compareArtworkNew(
+				n.OriginalColors,
+				n.Colors,
+			)
+			out <- Structs.PotentialAlbum{
+				Similar:             similar,
+				Image:               n.Image,
+				Colors:              n.Colors,
+				OriginalColors:      n.OriginalColors,
+				Album:               n.Album,
+				RecommendedChan:     n.RecommendedChan,
+				RecommendedChanSize: n.RecommendedChanSize,
+				VisitedAlbums:       n.VisitedAlbums,
+			}
+		}
+		close(out)
+	}()
+	return out
+}
+
+func assignRecommendationStg(in <-chan Structs.PotentialAlbum) {
+	go func() {
+		for n := range in {
+			assignRecommendation(
+				n.Similar,
+				n.Album,
+				n.RecommendedChanSize,
+				n.Colors,
+				n.VisitedAlbums,
+				n.RecommendedChan,
+			)
+		}
+	}()
+}
+
+func assignRecommendation(
+	similar bool,
+	album spotify.SimpleAlbum,
+	size *uint32,
+	colors []prominentcolor.ColorItem,
+	visitedAlbums map[string]bool,
+	ch chan Structs.RecommendedAlbum,
+) {
+	if similar {
+		if album.AlbumType != "single" {
+			atomic.AddUint32(size, 1)
+			endStream := atomic.LoadUint32(size) == uint32(cap(ch))
+			println(endStream)
+
+			albumToReturn := Structs.RecommendedAlbum{
+				Type:      album.AlbumType,
+				Id:        album.ID.String(),
+				Name:      album.Name,
+				Artists:   album.Artists[0].Name,
+				Image:     album.Images[0].URL,
+				Colors:    colors,
+				EndStream: endStream,
+			}
+
+			visitedAlbums[album.ID.String()] = true
+			print(albumToReturn.Name)
+			println("got an album")
+			ch <- albumToReturn
+			println(atomic.LoadUint32(size))
+		}
+	}
 }
 
 func getMostSaturatedColor(colors []prominentcolor.ColorItem) []prominentcolor.ColorItem {
