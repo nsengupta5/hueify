@@ -5,15 +5,19 @@ import AlbumSearch from "./components/AlbumSearch";
 import { Link } from "react-router-dom";
 
 const App = () => {
-  const [backgroundColor, setBackgroundColor] = useState("#00d3ff");
+  const [backgroundColor, setBackgroundColor] = useState(["#0053ff","#00d3ff"]);
 
   const getBackgroundImage = (data) => {
-    console.log(data);
+    console.log("data: " + data);
     setBackgroundColor(data);
   }
 
+  // useEffect(()=>{
+  //   setSecondaryColor();
+  // },[primaryColor])
+
   return (
-    <div className="h-full min-h-screen" style={{backgroundImage: `linear-gradient(to bottom, ${backgroundColor}, white)`}}>
+    <div className="h-full min-h-screen" style={{backgroundImage: `radial-gradient(${backgroundColor[0]}, ${backgroundColor[1]})`}}>
       <Layout>
           <AlbumSearch func={getBackgroundImage}/>
       </Layout>

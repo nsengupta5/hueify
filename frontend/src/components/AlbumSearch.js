@@ -44,8 +44,9 @@ const AlbumSearch = (props) => {
       axios.get(`/api/get-album/${transformedURL}`)
         .then((res) => {
           setAlbum(res.data)
-          let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
-          props.func(promColor);
+          let primaryColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
+          let secondaryColor = `rgba(${res.data.image_colors[1].Color.R},${res.data.image_colors[1].Color.G},${res.data.image_colors[1].Color.B},1)`
+          props.func([primaryColor, secondaryColor]);
         })
     }
 
@@ -53,8 +54,9 @@ const AlbumSearch = (props) => {
       axios.get(`/api/get-album/${url}`)
         .then((res) => {
           setAlbum(res.data)
-          let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
-          props.func(promColor);
+          let primaryColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
+          let secondaryColor = `rgba(${res.data.image_colors[1].Color.R},${res.data.image_colors[1].Color.G},${res.data.image_colors[1].Color.B},1)`
+          props.func([primaryColor, secondaryColor]);
         })
     }
 
