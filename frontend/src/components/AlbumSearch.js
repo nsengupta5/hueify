@@ -41,25 +41,22 @@ const AlbumSearch = (props) => {
         transformedURL = "spotify:track:" + url.substring(startIdx, endIdx)
       }
 
-      axios.get(`/api/get-album/${transformedURL}`)
+      axios.get(`https://hueify.netlify.app/api/get-album/${transformedURL}`)
         .then((res) => {
           setAlbum(res.data)
-          let primaryColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
-          let secondaryColor = `rgba(${res.data.image_colors[1].Color.R},${res.data.image_colors[1].Color.G},${res.data.image_colors[1].Color.B},1)`
-          props.func([primaryColor, secondaryColor]);
+          let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
+          props.func(promColor);
         })
     }
 
     else {
-      axios.get(`/api/get-album/${url}`)
+      axios.get(`https://hueify.netlify.app/api/get-album/${url}`)
         .then((res) => {
           setAlbum(res.data)
-          let primaryColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
-          let secondaryColor = `rgba(${res.data.image_colors[1].Color.R},${res.data.image_colors[1].Color.G},${res.data.image_colors[1].Color.B},1)`
-          props.func([primaryColor, secondaryColor]);
+          let promColor = `rgba(${res.data.image_colors[0].Color.R},${res.data.image_colors[0].Color.G},${res.data.image_colors[0].Color.B},1)`
+          props.func(promColor);
         })
     }
-
   }
 
   const getRecommendedAlbums = () => {
@@ -93,13 +90,13 @@ const AlbumSearch = (props) => {
       </div>
       {!goClicked
         ?
-        <div className="flex justify-center ">
-          <button className="inline-block px-6 py-2 text-xs font-medium leading-tight uppercase bg-gray-900 border-2 border-gray-900 rounded btn text-gray-50 hover:bg-black focus:outline-none focus:ring-0 transition duration-150 ease-in-out">
-            <Link to={`/create`}>Create Playlist</Link>
-          </button>
-        </div>
-        :
-        <></>
+          <div className="flex justify-center ">
+            <button className="inline-block px-6 py-2 text-xs font-medium leading-tight uppercase bg-gray-900 border-2 border-gray-900 rounded btn text-gray-50 hover:bg-black focus:outline-none focus:ring-0 transition duration-150 ease-in-out">
+              <Link to={`/create`}>Create Playlist</Link>
+            </button>
+          </div>
+          :
+          <></>
       }
       {Object.keys(album).length !== 0 &&
         <>

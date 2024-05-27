@@ -1,4 +1,2 @@
-cd ./frontend
-npm run build
-cd ../backend
+cd backend
 go run main.go

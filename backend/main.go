@@ -12,11 +12,16 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
@@ -44,6 +49,10 @@ var clientErr error
 
 func main() {
 	var err error
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = string(8080)
+	}
 
 	//set up Firestore for artist metadata (related artists)
 	ctx = context.Background()
@@ -94,7 +103,7 @@ func main() {
 
 	}
 
-	err = router.Run("localhost:8080")
+	err = router.Run(":" + port)
 	if err != nil {
 		return
 	}

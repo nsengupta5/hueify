@@ -12,7 +12,7 @@ const GeneratePlaylist = () =>{
    
     const genPlaylist = (event) => {
         event.preventDefault();
-        axios.post(`/api/create-playlist/`,
+        axios.post(`https://hueify.netlify.app/api/create-playlist/`,
             {
                 primaryRGB: primaryColor,
                 secondaryRGB: secondaryColor,
@@ -35,7 +35,7 @@ const GeneratePlaylist = () =>{
             <div className="flex justify-center pt-64">
                 <ColorPicker text={"Primary"} func={pullData} type={true}/>
                 <ColorPicker text={"Secondary"} func={pullData} type={false}/>
-                <button className="btn inline-block px-6 py-2 border-2 border-gray-900 bg-gray-900 text-gray-50 font-medium text-xs leading-tight uppercase rounded hover:bg-black focus:outline-none focus:ring-0 transition duration-150 ease-in-out" type="button" id="button-addon3" onClick={genPlaylist}>Generate</button>
+                <button className="inline-block px-6 py-2 text-xs font-medium leading-tight uppercase bg-gray-900 border-2 border-gray-900 rounded btn text-gray-50 hover:bg-black focus:outline-none focus:ring-0 transition duration-150 ease-in-out" type="button" id="button-addon3" onClick={genPlaylist}>Generate</button>
                 <PlaylistCanvas />
             </div>
         </Layout>
